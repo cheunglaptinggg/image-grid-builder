@@ -166,57 +166,78 @@ document.addEventListener('DOMContentLoaded', () => {
     offsetXSliders.forEach(slider => slider.addEventListener('input', handleSliderChange));
     offsetYSliders.forEach(slider => slider.addEventListener('input', handleSliderChange));
 
-   // --- REVERTED Template Selection Handling (Using Direct loadImage for Local file:/// Viewing) ---
-    async function handlePresetChange() {
-        const selectedValue = templatePresetSelect.value;
-        console.log('[handlePresetChange (Direct Load)] Started. Selected value:', selectedValue);
-
-        templateImageObject = null; activeTemplateSettings = null;
-        selectedTemplatePreviewImg.src = '#'; selectedTemplatePreviewImg.style.display = 'none';
-        liveCtx.clearRect(0, 0, livePreviewCanvas.width, livePreviewCanvas.height);
-
-        if (selectedValue === 'custom') {
-            console.log('[handlePresetChange (Direct Load)] Handling CUSTOM selection.');
-            customTemplateUploadDiv.style.display = 'block'; gridMarginsContainer.style.display = 'block';
-            setMarginInputs({ top: 0, bottom: 0, left: 0, right: 0 }, false);
-            statusElem.textContent = 'Select or upload a custom template PNG.'; templateFile = null;
-            activeTemplateSettings = { type: 'custom', file: null, margins: {top:0, bottom:0, left:0, right:0}, padding: {top:0, bottom:0, left:0, right:0} };
-            const potentialCustomFile = templateInput.files && templateInput.files[0];
-            if (potentialCustomFile) { await loadCustomTemplate(potentialCustomFile); } else { templateImageObject = null; }
-
-        } else {
-            // --- Handle Selecting a Preset (Direct Loading) ---
-            console.log('[handlePresetChange (Direct Load)] Handling PRESET selection.');
-            customTemplateUploadDiv.style.display = 'none'; gridMarginsContainer.style.display = 'block'; templateInput.value = '';
-            const presetIndex = parseInt(selectedValue, 10); const preset = templatePresets[presetIndex];
-
-            if (preset) {
-                console.log('[handlePresetChange (Direct Load)] Loading preset:', preset.name, 'from URL:', preset.url);
-                setMarginInputs(preset.margins, true); statusElem.textContent = `Loading ${preset.name}...`; generateBtn.disabled = true; templateFile = preset.url;
-                activeTemplateSettings = { type: 'preset', url: preset.url, margins: { ...preset.margins }, padding: { ...(preset.padding || { top: 0, bottom: 0, left: 0, right: 0 }) } };
-
-                try {
-                    // *** Use direct loadImage (Will load locally, but taint canvas for export) ***
-                    console.log('[handlePresetChange (Direct Load)] Attempting direct loadImage:', preset.url);
-                    templateImageObject = await loadImage(preset.url);
-
-                    selectedTemplatePreviewImg.src = templateImageObject.src; selectedTemplatePreviewImg.style.display = 'block';
-                    statusElem.textContent = `Preset "${preset.name}" loaded. (WARNING: Export will fail if run locally via file:///)`; // WARN USER
-                    console.log('[handlePresetChange (Direct Load)] Preset loaded successfully.');
+   // --- template "${preset.name}" loaded.`;
                     drawLivePreview();
 
-                } catch (error) {
-                    console.error("[handlePresetChange (Direct Load)] Error loading preset:", error);
-                    statusElem.textContent = `Error loading preset: ${error.message}. Check path.`;
-                    templateImageObject=null; activeTemplateSettings=null; selectedTemplatePreviewImg.src='#'; selectedTemplatePreviewImg.style.display='none'; liveCtx.clearRect(0,0,livePreviewCanvas.width,livePreviewCanvas.height); setMarginInputs({top:0,bottom:0,left:0,right:0},true);
+ REVERTED Template Selection Handling (Using Fetch for Data URL - FOR SERVER USE) ---
+    async function handlePresetChange() {
+        const selectedValue = templatePresetSelect.value;
+        console.log('[handlePresetChange (Fetch Method)] Started. Selected value:',                } catch (error) { // Catch fetch, blob, reader, or loadImage errors
+                    console.error("[handlePresetChange (Fetch Method)] Error loading preset:", error);
+                    statusElem.textContent = `Error loading preset: ${error.message}.`;
+                    template selectedValue);
+
+        // Reset general template state
+        templateImageObject = null;
+ImageObject = null; activeTemplateSettings = null; selectedTemplatePreviewImg.src = '#'; selectedTemplatePreviewImg.style.display = 'none';
+                    liveCtx.clearRect(0,        activeTemplateSettings = null;
+        selectedTemplatePreviewImg.src = 0, livePreviewCanvas.width, livePreviewCanvas.height); set '#';
+        selectedTemplatePreviewImg.style.display = 'none';MarginInputs({ top: 0, bottom: 0, left: 0, right
+        liveCtx.clearRect(0, 0, livePreviewCanvas.: 0 }, true);
                 } finally {
                      updateGenerateButtonState();
                 }
-            } else { statusElem.textContent='Invalid preset.'; templateFile=null; activeTemplateSettings=null; setMarginInputs({top:0,bottom:0,left:0,right:0},true); }
-        }
+            } else { console.warn('[handlePresetChange] Invalid preset index selected:', selectedValue); statusElem.textContent = 'Invalid preset selected.'; templateFile =width, livePreviewCanvas.height);
+
+        if (selectedValue === 'custom') {
+            console.log('[handlePresetChange (Fetch Method)] Handling CUSTOM selection.');
+             null; activeTemplateSettings = null; setMarginInputs({ top: 0, bottom: 0, left: 0, right: 0 }, true); }
+        customTemplateUploadDiv.style.display = 'block';
+            gridMarginsContainer.style.display = 'block';
+            setMarginInputs({ top: 0, bottom}
         updateGenerateButtonState();
-        console.log('[handlePresetChange (Direct Load)] Finished.');
+        console.log('[handlePreset: 0, left: 0, right: 0 }, false);Change (Fetch Method)] Finished.');
     }
+    ```
+    *(
+            statusElem.textContent = 'Select or upload a custom template PNG.';
+            templateFile = null;
+
+            activeTemplateSettings = { type: 'custom', file: null, margins: {top:0, bottom:0, left:0, right:0}, padding: {top:0, bottom:0, left:Make sure to replace **only** the `handlePresetChange` function in your current `script.js` with this one)*
+
+2.  **Run Using0, right:0} };
+
+            const potentialCustomFile = templateInput.files && templateInput.files[0];
+            if (potentialCustomFile) {
+                console.log('[handlePresetChange (Fetch Method)] a Local Server:**
+    *   **VS Code + Live Server (E Custom file input has a file, reloading.');
+                await loadCustomTemplate(asiest):** Right-click `index.html` -> "Open with Live Server".
+    *   **Python:** `cd your_project_folder` then `python -m http.server`. Open `http://localhost:8000`.
+    *   **Node.js:** `cd yourpotentialCustomFile);
+            } else {
+                 console.log('[handlePresetChange (Fetch Method)] Custom file input is empty.');
+                 templateImageObject = null; // Ensure cleared
+            }
+
+        } else {
+             // --- Handle Selecting a Preset (Fetch -> Data URL) ---
+            console.log('[handlePresetChange (Fetch Method)] Handling PRESET selection.');_project_folder` then `npx serve`. Open the local address it
+            customTemplateUploadDiv.style.display = 'none';
+            gridMarginsContainer.style.display = 'block';
+            templateInput.value = ''; // Clear custom file input field visually
+
+            const presetIndex = parseInt(selectedValue, 10);
+            const preset = gives you.
+
+With the `fetch` version of the code running on a local ` templatePresets[presetIndex];
+
+            if (preset) {
+                console.log('[handlePresetChange (Fetch Method)] Loading preset:', preset.name, 'from URL:', preset.url);
+                setMarginInputs(preset.margins, true); // Use preset margins, disable editing
+                statusElem.textContent = `Loading preset: ${preset.name}...`;
+                generateBtn.disabled = true;
+                templateFile = preset.urlhttp://` server, both loading presets and exporting the final image (without tainting) will work correctly.
+
     // --- Keep the rest of the script.js file exactly the same ---
     // ... (loadCustomTemplate, other helpers, event listeners, drawing functions, etc.) ...
      async function loadCustomTemplate(file) { /* ... as before ... */
