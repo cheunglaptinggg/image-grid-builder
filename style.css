@@ -540,3 +540,71 @@ input[type="file"]::file-selector-button:hover {
 }
 
 /* ... (Rest of your CSS) ... */
+
+/* --- Keep ALL previous CSS --- */
+
+/* ... (Existing styles) ... */
+
+
+/* --- NEW: Selected Template Preview --- */
+.selected-template-preview-area {
+    margin-top: 10px;
+    text-align: center; /* Center the image */
+    min-height: 60px; /* Reserve some space */
+}
+.template-preview-small {
+    max-width: 150px; /* Adjust size as needed */
+    max-height: 100px; /* Adjust size as needed */
+    height: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: #e9ecef; /* Help see transparency */
+}
+.template-preview-small[src="#"] {
+    display: none; /* Hide if no src */
+}
+
+/* Ensure preset selector div adapts */
+.preset-selector {
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- Template Upload Adjustments --- */
+.template-upload input[type="file"] {
+     margin-bottom: 10px; /* Add space if using small preview */
+}
+
+/* --- NEW: Live Preview Styles --- */
+.action-section h2 {
+    /* Ensure consistent spacing if adding Live Preview title */
+     margin-bottom: 1em;
+     text-align: center;
+}
+
+.live-preview-container {
+    width: 100%;
+    max-width: 400px; /* Limit max size of preview */
+    margin: 0 auto 25px auto; /* Center and add space below */
+    border: 2px dashed var(--primary-color); /* Highlight it */
+    padding: 5px;
+    background-color: var(--background-color);
+    border-radius: var(--border-radius);
+}
+
+#livePreviewCanvas {
+    display: block; /* Remove extra space */
+    width: 100%; /* Scale down visually */
+    height: auto; /* Maintain aspect ratio */
+    max-height: 400px; /* Prevent excessive height */
+}
+
+
+/* --- Responsive: Adjust preview sizes maybe --- */
+@media (max-width: 600px) {
+    .live-preview-container {
+        max-width: 95%; /* Allow slightly wider on small screens */
+    }
+}
+
+/* ... (Rest of your CSS) ... */
