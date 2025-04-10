@@ -39,13 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Template Presets Definition ---
     const templatePresets = [
         {
-            name: "Square Border (10px)",
-            url: "templates/square_border.png", // PATH TO YOUR FILE
-            margins: { top: 10, bottom: 10, left: 10, right: 10 }
-        },
-        {
             name: "Portrait Header (140px)",
-            url: "templates/portrait_header_footer.png", // PATH TO YOUR FILE
+            url: "templates/Untitled-2.png", // PATH TO YOUR FILE
             margins: { top: 140, bottom: 0, left: 0, right: 0 }
         },
 	{
