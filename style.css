@@ -421,3 +421,122 @@ input[type="file"]::file-selector-button:hover {
         grid-template-columns: 1fr 1fr; /* Two columns for margins */
     }
 }
+
+/* --- Keep ALL previous CSS --- */
+
+/* ... (Existing styles) ... */
+
+/* --- Photo Upload Area --- */
+.photo-upload-area {
+    display: flex;
+    flex-wrap: wrap; /* Allow button to wrap on small screens */
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: var(--background-color);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+.photo-upload-area label {
+    margin-bottom: 0; /* Remove default margin */
+    flex-basis: 100%; /* Take full width initially */
+    font-weight: 700;
+}
+.photo-upload-area input[type="file"] {
+    flex-grow: 1; /* Allow input to take available space */
+    min-width: 200px; /* Ensure minimum width */
+}
+/* Basic Button Styling (Reuse for clear buttons) */
+.secondary-button, .clear-slot-btn {
+    padding: 8px 15px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: 1px solid var(--secondary-border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    white-space: nowrap; /* Prevent text wrapping */
+}
+.secondary-button:hover, .clear-slot-btn:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+
+/* --- Photo Slot Enhancements --- */
+.slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px; /* Space between header and preview */
+}
+.slot-header span {
+    font-weight: 600;
+    font-size: 0.9em;
+    color: var(--text-muted);
+}
+.clear-slot-btn {
+    background-color: var(--danger-color); /* Red for clear */
+    border-color: #b02a37;
+    padding: 3px 8px; /* Smaller padding */
+    font-size: 0.8em;
+    line-height: 1; /* Adjust line height */
+}
+.clear-slot-btn:hover {
+     background-color: #c82333;
+     border-color: #b02a37;
+}
+
+/* --- Template Selection Area --- */
+.template-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+.preset-selector, .template-upload {
+    padding: 15px;
+    background-color: var(--background-color);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+.preset-selector label, .template-upload label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+#templatePresets {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: #fff;
+    font-size: 1rem;
+    height: var(--input-height);
+    cursor: pointer;
+     -webkit-appearance: none; /* Custom arrow styling */
+     -moz-appearance: none;
+     appearance: none;
+     background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007bff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+     background-repeat: no-repeat;
+     background-position: right 12px center;
+     background-size: 10px auto;
+}
+
+/* Hide custom upload or margin section when needed */
+#customTemplateUpload[style*="display: none"],
+/* #gridMarginsContainer[style*="display: none"] {  // Decide if you want to hide margins container too */
+    display: none !important;
+}
+
+
+/* --- Grid Margins Enhancements --- */
+.grid-margins input[type="number"]:disabled {
+    background-color: #e9ecef; /* Grey out when disabled */
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* ... (Rest of your CSS) ... */

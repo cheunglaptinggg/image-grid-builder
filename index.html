@@ -10,82 +10,106 @@
     <h1>Image Grid Builder (2x2)</h1>
 
     <div class="instructions">
-        <p>1. Upload 4 photos.</p>
+        <p>1. **Upload Photos:** Use the button below to select up to 4 photos at once.</p>
         <p>2. Adjust Scale (Zoom) and Position (X/Y Offset) for each photo.</p>
-        <p>3. Upload 1 transparent PNG template.</p>
-        <p>4. <strong>(Optional) Define Grid Area Margins:</strong> Specify the space (in pixels) inside the template where the 2x2 grid should fit, ignoring headers/footers/borders.</p>
+        <p>3. **Choose Template:** Select a preset or upload a custom transparent PNG.</p>
+        <p>4. **(If Custom Template):** Define Grid Area Margins.</p>
         <p>5. Generate!</p>
     </div>
 
     <div class="main-container">
         <div class="upload-section">
             <h2>Upload & Adjust Photos</h2>
+            <div class="photo-upload-area">
+                 <label for="photoBatchInput">Upload Photos (Select 1-4 files):</label>
+                 <!-- Single input for batch upload -->
+                 <input type="file" id="photoBatchInput" accept="image/*" multiple>
+                 <button id="clearAllPhotosBtn" class="secondary-button">Clear All Photos</button>
+            </div>
+
             <div class="photo-grid-editor">
-                <!-- Photo Slots 1-4 (Keep as before) -->
+                <!-- Photo Slots 1-4 (Keep structure, remove individual inputs) -->
                 <div class="photo-slot" data-index="0">
-                    <label for="photo1">Photo 1 (Top-Left)</label>
-                    <input type="file" id="photo1" data-index="0" class="photo-input" accept="image/*">
+                    <div class="slot-header">
+                         <span>Photo 1 (Top-Left)</span>
+                         <button class="clear-slot-btn" data-index="0" style="display: none;">✖ Clear</button>
+                    </div>
                     <div class="preview-container" id="previewContainer0"><div class="preview-bg" id="previewBg0"></div></div>
                     <div class="controls-group">
-                        <label for="scale0">Scale:</label>
-                        <input type="range" id="scale0" class="scale-slider" data-index="0" min="1" max="3" step="0.05" value="1">
-                        <label for="offsetX0">X Offset:</label>
-                        <input type="range" id="offsetX0" class="offset-slider-x" data-index="0" min="0" max="100" step="1" value="50">
-                        <label for="offsetY0">Y Offset:</label>
-                        <input type="range" id="offsetY0" class="offset-slider-y" data-index="0" min="0" max="100" step="1" value="50">
+                         <label for="scale0">Scale:</label>
+                         <input type="range" id="scale0" class="scale-slider" data-index="0" min="1" max="3" step="0.05" value="1" disabled>
+                         <label for="offsetX0">X Offset:</label>
+                         <input type="range" id="offsetX0" class="offset-slider-x" data-index="0" min="0" max="100" step="1" value="50" disabled>
+                         <label for="offsetY0">Y Offset:</label>
+                         <input type="range" id="offsetY0" class="offset-slider-y" data-index="0" min="0" max="100" step="1" value="50" disabled>
                     </div>
                 </div>
                 <div class="photo-slot" data-index="1">
-                     <label for="photo2">Photo 2 (Top-Right)</label>
-                     <input type="file" id="photo2" data-index="1" class="photo-input" accept="image/*">
-                     <div class="preview-container" id="previewContainer1"><div class="preview-bg" id="previewBg1"></div></div>
+                     <div class="slot-header">
+                          <span>Photo 2 (Top-Right)</span>
+                          <button class="clear-slot-btn" data-index="1" style="display: none;">✖ Clear</button>
+                     </div>
+                    <div class="preview-container" id="previewContainer1"><div class="preview-bg" id="previewBg1"></div></div>
                      <div class="controls-group">
-                         <label for="scale1">Scale:</label>
-                         <input type="range" id="scale1" class="scale-slider" data-index="1" min="1" max="3" step="0.05" value="1">
-                         <label for="offsetX1">X Offset:</label>
-                         <input type="range" id="offsetX1" class="offset-slider-x" data-index="1" min="0" max="100" step="1" value="50">
-                         <label for="offsetY1">Y Offset:</label>
-                         <input type="range" id="offsetY1" class="offset-slider-y" data-index="1" min="0" max="100" step="1" value="50">
+                          <label for="scale1">Scale:</label>
+                          <input type="range" id="scale1" class="scale-slider" data-index="1" min="1" max="3" step="0.05" value="1" disabled>
+                          <label for="offsetX1">X Offset:</label>
+                          <input type="range" id="offsetX1" class="offset-slider-x" data-index="1" min="0" max="100" step="1" value="50" disabled>
+                          <label for="offsetY1">Y Offset:</label>
+                          <input type="range" id="offsetY1" class="offset-slider-y" data-index="1" min="0" max="100" step="1" value="50" disabled>
                      </div>
                  </div>
                  <div class="photo-slot" data-index="2">
-                     <label for="photo3">Photo 3 (Bottom-Left)</label>
-                     <input type="file" id="photo3" data-index="2" class="photo-input" accept="image/*">
-                     <div class="preview-container" id="previewContainer2"><div class="preview-bg" id="previewBg2"></div></div>
-                      <div class="controls-group">
-                         <label for="scale2">Scale:</label>
-                         <input type="range" id="scale2" class="scale-slider" data-index="2" min="1" max="3" step="0.05" value="1">
-                         <label for="offsetX2">X Offset:</label>
-                         <input type="range" id="offsetX2" class="offset-slider-x" data-index="2" min="0" max="100" step="1" value="50">
-                         <label for="offsetY2">Y Offset:</label>
-                         <input type="range" id="offsetY2" class="offset-slider-y" data-index="2" min="0" max="100" step="1" value="50">
+                     <div class="slot-header">
+                          <span>Photo 3 (Bottom-Left)</span>
+                          <button class="clear-slot-btn" data-index="2" style="display: none;">✖ Clear</button>
                      </div>
+                    <div class="preview-container" id="previewContainer2"><div class="preview-bg" id="previewBg2"></div></div>
+                      <div class="controls-group">
+                          <label for="scale2">Scale:</label>
+                          <input type="range" id="scale2" class="scale-slider" data-index="2" min="1" max="3" step="0.05" value="1" disabled>
+                          <label for="offsetX2">X Offset:</label>
+                          <input type="range" id="offsetX2" class="offset-slider-x" data-index="2" min="0" max="100" step="1" value="50" disabled>
+                          <label for="offsetY2">Y Offset:</label>
+                          <input type="range" id="offsetY2" class="offset-slider-y" data-index="2" min="0" max="100" step="1" value="50" disabled>
+                      </div>
                  </div>
                  <div class="photo-slot" data-index="3">
-                     <label for="photo4">Photo 4 (Bottom-Right)</label>
-                     <input type="file" id="photo4" data-index="3" class="photo-input" accept="image/*">
-                     <div class="preview-container" id="previewContainer3"><div class="preview-bg" id="previewBg3"></div></div>
-                      <div class="controls-group">
-                         <label for="scale3">Scale:</label>
-                         <input type="range" id="scale3" class="scale-slider" data-index="3" min="1" max="3" step="0.05" value="1">
-                         <label for="offsetX3">X Offset:</label>
-                         <input type="range" id="offsetX3" class="offset-slider-x" data-index="3" min="0" max="100" step="1" value="50">
-                         <label for="offsetY3">Y Offset:</label>
-                         <input type="range" id="offsetY3" class="offset-slider-y" data-index="3" min="0" max="100" step="1" value="50">
+                     <div class="slot-header">
+                          <span>Photo 4 (Bottom-Right)</span>
+                          <button class="clear-slot-btn" data-index="3" style="display: none;">✖ Clear</button>
                      </div>
+                    <div class="preview-container" id="previewContainer3"><div class="preview-bg" id="previewBg3"></div></div>
+                      <div class="controls-group">
+                          <label for="scale3">Scale:</label>
+                          <input type="range" id="scale3" class="scale-slider" data-index="3" min="1" max="3" step="0.05" value="1" disabled>
+                          <label for="offsetX3">X Offset:</label>
+                          <input type="range" id="offsetX3" class="offset-slider-x" data-index="3" min="0" max="100" step="1" value="50" disabled>
+                          <label for="offsetY3">Y Offset:</label>
+                          <input type="range" id="offsetY3" class="offset-slider-y" data-index="3" min="0" max="100" step="1" value="50" disabled>
+                      </div>
                  </div>
-            </div>
+            </div> <!-- End photo-grid-editor -->
 
-            <h2>Upload Template & Define Grid Area</h2>
+            <h2>Select Template & Define Grid Area</h2>
             <div class="template-section">
-                <div class="template-upload">
-                     <label for="template">Template File (PNG)</label>
-                     <input type="file" id="template" accept="image/png">
-                     <img id="previewTemplate" src="#" alt="Template Preview" class="preview-img template-preview">
+                <div class="template-selection">
+                    <div class="preset-selector">
+                         <label for="templatePresets">Choose Preset Template:</label>
+                         <select id="templatePresets">
+                              <option value="custom">-- Custom Upload --</option>
+                              <!-- Options will be populated by JS -->
+                         </select>
+                    </div>
+                    <div class="template-upload" id="customTemplateUpload"> <!-- Initially hidden maybe -->
+                         <label for="template">Upload Custom Template (PNG)</label>
+                         <input type="file" id="template" accept="image/png">
+                         <img id="previewTemplate" src="#" alt="Template Preview" class="preview-img template-preview">
+                    </div>
                 </div>
-                <!-- NEW: Grid Margin Inputs -->
-                <div class="grid-margins">
-                    <p>Define Grid Area Margins (pixels inside template):</p>
+
+                <div class="grid-margins" id="gridMarginsContainer">
+                    <p>Grid Area Margins (pixels inside template):</p>
                     <div class="margin-inputs">
                         <div class="margin-input-group">
                             <label for="gridMarginTop">Top:</label>
@@ -104,22 +128,25 @@
                             <input type="number" id="gridMarginRight" value="0" min="0" step="1">
                         </div>
                     </div>
-                     <small>These values define the space from the template edge to the start of the 2x2 photo grid.</small>
+                     <small>Define the space from the template edge to the 2x2 photo grid.</small>
                 </div>
-            </div>
-        </div>
+            </div> <!-- End template-section -->
+        </div> <!-- End upload-section -->
 
         <div class="action-section">
             <button id="generateBtn" disabled>Generate Image</button>
-            <p id="status"></p>
+            <p id="status">Upload photos and select a template.</p> <!-- Updated initial status -->
             <div class="result-display">
                 <h2>Result</h2>
                 <canvas id="canvas" style="display: none;"></canvas>
                 <img id="resultImage" src="#" alt="Generated Image Result" class="result-img">
+                <p id="mobileSaveHint" class="mobile-hint" style="display: none;">
+                    <small><b>On mobile?</b> Tap and hold the image above, then select 'Save Image' or 'Download Image'.</small>
+                </p>
                 <a id="downloadLink" href="#" download="generated-image.png" style="display: none;">Download Image</a>
             </div>
         </div>
-    </div>
+    </div> <!-- End main-container -->
 
     <script src="script.js"></script>
 </body>
