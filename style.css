@@ -1,0 +1,488 @@
+Okay, let's refactor the CSS for a modern, minimal, flat design using the "Nunito" font and then discuss how to use it on your phone.
+
+1. Update style.css
+
+Replace the entire content of your style.css file with the following. This includes the Nunito font import, CSS variables for easy color changes, and refined styles for all elements.
+
+/* --- Import Font --- */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+
+/* --- CSS Variables (Customize Colors Here) --- */
+:root {
+    --primary-color: #007bff; /* Blue */
+    --primary-hover: #0056b3;
+    --secondary-color: #6c757d; /* Grey */
+    --background-color: #f8f9fa; /* Very light grey */
+    --card-background: #ffffff; /* White */
+    --text-color: #343a40;      /* Dark grey */
+    --text-muted: #6c757d;     /* Lighter grey */
+    --border-color: #dee2e6;    /* Light border */
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --font-family: 'Nunito', sans-serif;
+    --border-radius: 8px; /* Consistent rounded corners */
+    --input-height: 40px;
+}
+
+/* --- General Styles --- */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    padding: 20px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    font-size: 16px; /* Base font size */
+}
+
+h1, h2 {
+    color: var(--text-color);
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1.5em;
+}
+
+h1 {
+    font-size: 2.2em;
+}
+
+h2 {
+    font-size: 1.6em;
+    margin-top: 2em; /* More space above section titles */
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 0.9em;
+    color: var(--text-muted);
+}
+
+input[type="file"],
+input[type="range"],
+input[type="number"],
+button {
+    font-family: inherit; /* Ensure inputs use the Nunito font */
+    font-size: 1rem;
+}
+
+small {
+    font-size: 0.85em;
+    color: var(--text-muted);
+}
+
+/* --- Layout Containers --- */
+.main-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: var(--card-background);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    display: grid; /* Use grid for main layout */
+    grid-template-columns: 1fr; /* Default to single column */
+    gap: 30px;
+}
+
+/* Make layout two-column on wider screens */
+@media (min-width: 992px) {
+    .main-container {
+        grid-template-columns: 2fr 1fr; /* Uploads take more space */
+    }
+    .action-section {
+        position: sticky; /* Make results stick on scroll */
+        top: 20px;
+        align-self: start; /* Prevent stretching */
+    }
+}
+
+
+.upload-section,
+.action-section,
+.template-section,
+.instructions,
+.grid-margins {
+    padding: 20px;
+    border-radius: var(--border-radius);
+    background-color: var(--card-background);
+}
+
+.instructions {
+    background-color: #e9ecef; /* Slightly different background */
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+}
+.instructions p {
+    margin: 0.5em 0;
+    font-size: 0.95em;
+}
+
+
+/* --- Photo Grid Editor --- */
+.photo-grid-editor {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive grid */
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.photo-slot {
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    background-color: var(--background-color); /* Slightly different bg for slots */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.preview-container {
+    width: 100%;
+    padding-top: 100%; /* Maintain 1:1 Aspect Ratio */
+    position: relative;
+    border: 1px dashed var(--border-color);
+    border-radius: calc(var(--border-radius) / 2); /* Slightly smaller radius */
+    overflow: hidden;
+    background-color: #e9ecef; /* Placeholder bg */
+}
+
+.preview-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover; /* Default size */
+    background-position: center center;
+    background-repeat: no-repeat;
+    transition: background-size 0.1s ease, background-position 0.1s ease;
+}
+
+/* --- Controls --- */
+.controls-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between controls */
+    margin-top: 10px;
+}
+
+.controls-group label {
+    margin-bottom: 0; /* Remove bottom margin since gap handles it */
+}
+
+/* Range Slider Styling */
+input[type="range"] {
+    -webkit-appearance: none; /* Override default look */
+    appearance: none;
+    width: 100%;
+    height: 8px;
+    background: #e9ecef; /* Light grey track */
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--primary-color); /* Blue thumb */
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+/* File Input Styling (Basic) */
+input[type="file"] {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 8px 12px;
+    width: 100%;
+    background-color: #fff;
+    cursor: pointer;
+    line-height: calc(var(--input-height) - 18px); /* Approx align */
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+input[type="file"]::file-selector-button { /* Style the "Browse" button */
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    margin-right: 10px;
+    font-family: inherit;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+input[type="file"]::file-selector-button:hover {
+    background-color: #5a6268;
+}
+
+
+/* --- Template Section --- */
+.template-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: 25px;
+    margin-top: 25px;
+}
+
+.template-upload {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.template-preview {
+    max-width: 250px; /* Limit preview size */
+    height: auto;
+    margin-top: 15px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    background-color: var(--background-color); /* Help see transparency */
+    display: block; /* For centering */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.template-preview[src="#"] { /* Hide empty preview */
+    display: none;
+}
+
+/* --- Grid Margin Styles --- */
+.grid-margins {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #e9ecef;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.grid-margins p {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.margin-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    max-width: 500px;
+    margin: 0 auto 10px auto;
+}
+
+.margin-input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.margin-input-group label {
+    font-size: 0.85em;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+}
+
+.margin-input-group input[type="number"] {
+    width: 80px;
+    height: var(--input-height);
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    text-align: center;
+    font-size: 0.9em;
+    background-color: #fff;
+    -moz-appearance: textfield; /* Remove number arrows FF */
+}
+.margin-input-group input[type="number"]::-webkit-outer-spin-button,
+.margin-input-group input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none; /* Remove number arrows Chrome/Safari */
+    margin: 0;
+}
+
+/* --- Action Section --- */
+.action-section {
+    background-color: var(--card-background);
+    padding: 25px;
+    border-radius: var(--border-radius);
+}
+
+.action-section h2 {
+    margin-top: 0; /* Remove top margin for first element in section */
+}
+
+#generateBtn,
+#downloadLink {
+    display: block; /* Make buttons full width */
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 1.1em;
+    font-weight: 600;
+    text-align: center;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+    text-decoration: none; /* For link */
+    margin-bottom: 15px; /* Space below button/link */
+}
+
+#generateBtn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+#generateBtn:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+}
+
+#generateBtn:disabled {
+    background-color: var(--secondary-color);
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+#status {
+    text-align: center;
+    margin: 15px 0;
+    font-weight: 600;
+    min-height: 1.6em; /* Prevent layout shift when text appears */
+}
+
+/* Style status based on content (you'd need JS to add classes) */
+#status.success { color: var(--success-color); }
+#status.error { color: var(--danger-color); }
+#status.loading { color: var(--secondary-color); }
+
+/* --- Result Display --- */
+.result-display {
+    margin-top: 20px;
+}
+
+.result-img {
+    max-width: 100%;
+    height: auto;
+    display: block; /* Prevents extra space below image */
+    margin: 0 auto 15px auto; /* Center and add space below */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+.result-img[src="#"] { /* Hide empty result image */
+    display: none;
+}
+
+#downloadLink {
+    background-color: var(--success-color);
+    color: white;
+    border: none;
+}
+#downloadLink:hover {
+    background-color: #218838; /* Darker green */
+}
+
+#downloadLink[style*="display: none"] { /* Hide if display: none */
+    display: none !important; /* Ensure it's hidden */
+}
+
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+    .main-container {
+        padding: 15px;
+    }
+    h1 {
+        font-size: 1.8em;
+    }
+    h2 {
+        font-size: 1.4em;
+    }
+    .photo-grid-editor {
+        grid-template-columns: 1fr; /* Stack photo slots */
+    }
+    .margin-inputs {
+        grid-template-columns: 1fr 1fr; /* Two columns for margins */
+    }
+}
+
+
+No changes are needed for index.html or script.js for these style updates.
+
+2. How to Use it Easily on Your Phone (Free Options)
+
+Since this is a web application built with HTML, CSS, and JavaScript, you can't just run the index.html file directly from your phone's file manager and expect it to work flawlessly, especially the file uploads (due to browser security restrictions - file:// protocol limitations).
+
+Here are the easiest free ways to use it on your phone:
+
+Option 1: Host it Online (Recommended & Easiest)
+
+This makes it accessible via a web URL from any device, including your phone.
+
+Use GitHub Pages (or similar):
+
+Create a GitHub Account: If you don't have one, sign up at github.com. It's free.
+
+Create a New Repository: Click the '+' icon -> "New repository". Give it a name (e.g., image-grid-builder). Make it Public. You can initialize it with a README.
+
+Upload Files: Go to your new repository page. Click "Add file" -> "Upload files". Drag and drop your index.html, style.css, and script.js files into the browser window. Commit the changes.
+
+Enable GitHub Pages: In your repository, go to "Settings" -> "Pages" (on the left sidebar). Under "Branch", select main (or master) and /root folder. Click "Save".
+
+Wait & Access: It might take a minute or two. GitHub will provide you with a URL (like https://your-username.github.io/image-grid-builder/). You can visit this URL from your phone's web browser (Chrome, Safari, etc.) and use the tool.
+
+Use Netlify Drop (or similar static hosts like Vercel, Cloudflare Pages):
+
+Go to app.netlify.com/drop.
+
+Drag the folder containing your index.html, style.css, and script.js files onto the webpage.
+
+Netlify will instantly deploy it and give you a temporary URL (like random-name-abc.netlify.app). You can use this URL on your phone. You can sign up for a free account to keep the site and customize the URL.
+
+Option 2: Run a Local Web Server App on Your Phone (More Technical)
+
+This allows you to run it directly from your phone's storage without needing an internet connection after setup, but it's a bit more involved.
+
+Install a Simple HTTP Server App: Search your phone's app store (Google Play Store for Android, App Store for iOS) for "HTTP Server" or "Web Server". Look for simple, free options.
+
+Android Example: "Simple HTTP Server", "Termux" (more advanced, requires installing packages like nodejs and using http-server).
+
+iOS Example: Finding free, simple ones can be harder. You might look for apps related to web development tools.
+
+Copy Files: Copy your index.html, style.css, and script.js files into a specific folder on your phone's storage that the server app can access.
+
+Start the Server: Open the server app, point it to the folder containing your files, and start the server.
+
+Access via IP: The app will typically show you a local IP address and port (e.g., http://192.168.1.10:8080). Open your phone's web browser and navigate to that exact address. You should see your Image Grid Builder.
+
+Why Option 1 is Usually Better:
+
+Simpler: No need to install extra apps on your phone or manage local servers.
+
+Accessible Anywhere: You can access the tool from any device with internet access using the URL.
+
+Easier Updates: Just update the files on GitHub/Netlify.
+
+Choose the method that best suits your comfort level! Hosting it online is generally the most straightforward and recommended approach for easy mobile access.
