@@ -318,16 +318,16 @@ document.addEventListener('DOMContentLoaded', () => {
     clearSlotBtns.forEach(btn => btn.addEventListener('click', (event) => clearPhotoSlot(parseInt(event.target.dataset.index, 10))));
     clearAllPhotosBtn.addEventListener('click', clearAllPhotoSlots);
 
-    // --- REFINED Template Selection Handling ---
+        // --- REVISED Template Selection Handling (Local File Compatibility) ---
     templatePresetSelect.addEventListener('change', handlePresetChange);
 
     async function handlePresetChange() {
         const selectedValue = templatePresetSelect.value;
-        console.log('[handlePresetChange] Started. Selected value:', selectedValue); // Debug
+        console.log('[handlePresetChange] Started. Selected value:', selectedValue);
 
         // Reset general template state
         templateImageObject = null;
-        activeTemplateSettings = null; // Reset active settings object
+        activeTemplateSettings = null;
         selectedTemplatePreviewImg.src = '#';
         selectedTemplatePreviewImg.style.display = 'none';
         liveCtx.clearRect(0, 0, livePreviewCanvas.width, livePreviewCanvas.height);
@@ -336,76 +336,67 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('[handlePresetChange] Handling CUSTOM selection.');
             customTemplateUploadDiv.style.display = 'block';
             gridMarginsContainer.style.display = 'block';
-            setMarginInputs({ top: 0, bottom: 0, left: 0, right: 0 }, false); // Enable margins
+            setMarginInputs({ top: 0, bottom: 0, left: 0, right: 0 }, false);
             statusElem.textContent = 'Select or upload a custom template PNG.';
-            templateFile = null; // Clear potential preset URL identifier
+            templateFile = null;
 
-            // Initialize active settings for an empty custom state
             activeTemplateSettings = { type: 'custom', file: null, margins: {top:0, bottom:0, left:0, right:0}, padding: {top:0, bottom:0, left:0, right:0} };
 
-            // If a file *is already selected* in the file input, try to load it
             const potentialCustomFile = templateInput.files && templateInput.files[0];
             if (potentialCustomFile) {
-                console.log('[handlePresetChange] Custom file input has a file, reloading:', potentialCustomFile.name);
-                await loadCustomTemplate(potentialCustomFile); // loadCustomTemplate updates activeTemplateSettings again
+                console.log('[handlePresetChange] Custom file input has a file, reloading.');
+                await loadCustomTemplate(potentialCustomFile);
             } else {
                  console.log('[handlePresetChange] Custom file input is empty.');
-                 // No file, ensure template object is null (already done above)
-                 templateImageObject = null;
+                 templateImageObject = null; // Ensure cleared
             }
 
         } else {
-             // --- Handle Selecting a Preset ---
+             // --- Handle Selecting a Preset (Direct Loading) ---
             console.log('[handlePresetChange] Handling PRESET selection.');
             customTemplateUploadDiv.style.display = 'none';
-            gridMarginsContainer.style.display = 'block'; // Keep margins visible (disabled)
-            templateInput.value = ''; // Clear custom file input field visually
+            gridMarginsContainer.style.display = 'block';
+            templateInput.value = ''; // Clear custom file input field
 
             const presetIndex = parseInt(selectedValue, 10);
             const preset = templatePresets[presetIndex];
 
             if (preset) {
-                console.log('[handlePresetChange] Loading preset:', preset.name);
+                console.log('[handlePresetChange] Loading preset:', preset.name, 'from URL:', preset.url);
                 setMarginInputs(preset.margins, true); // Use preset margins, disable editing
                 statusElem.textContent = `Loading preset: ${preset.name}...`;
                 generateBtn.disabled = true;
-                templateFile = preset.url; // Store original URL as identifier
+                templateFile = preset.url; // Store preset URL as identifier
 
-                // Set active settings object for the preset
-                activeTemplateSettings = {
+                activeTemplateSettings = { // Store active settings
                      type: 'preset', url: preset.url,
                      margins: { ...preset.margins },
                      padding: { ...(preset.padding || { top: 0, bottom: 0, left: 0, right: 0 }) }
                 };
 
-                try { // Fetch, convert to dataURL, load image
-                    const response = await fetch(preset.url);
-                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status} for ${preset.url}`);
-                    const imageBlob = await response.blob();
-                    const dataUrl = await new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onloadend = () => resolve(reader.result);
-                        reader.onerror = (err) => reject(new Error("Failed to read image blob as data URL."));
-                        reader.readAsDataURL(imageBlob);
-                    });
-                    templateImageObject = await loadImage(dataUrl); // Load from dataURL
+                try {
+                    // --- MODIFICATION: Load directly from URL, skipping fetch ---
+                    // This relies on the browser allowing direct load via src,
+                    // but might re-introduce canvas tainting issues on export when using file:///
+                    console.log('[handlePresetChange] Attempting direct loadImage:', preset.url);
+                    templateImageObject = await loadImage(preset.url); // <--- The direct load call
+                    // --- End Modification ---
 
                     selectedTemplatePreviewImg.src = templateImageObject.src;
                     selectedTemplatePreviewImg.style.display = 'block';
-                    statusElem.textContent = `Preset template "${preset.name}" loaded.`;
-                    console.log('[handlePresetChange] Preset loaded successfully.');
-                    drawLivePreview(); // Draw preview now that template is loaded
+                    statusElem.textContent = `Preset template "${preset.name}" loaded. (Note: Export might fail if run locally via file:///)`; // Add warning
+                    console.log('[handlePresetChange] Preset loaded successfully via direct loadImage.');
+                    drawLivePreview();
 
                 } catch (error) {
                     console.error("[handlePresetChange] Error loading preset:", error);
-                    statusElem.textContent = `Error loading preset: ${error.message}.`;
-                    templateImageObject = null; activeTemplateSettings = null; // Reset fully
+                    statusElem.textContent = `Error loading preset: ${error.message}. Check path/file exists.`;
+                    templateImageObject = null; activeTemplateSettings = null;
                     selectedTemplatePreviewImg.src = '#'; selectedTemplatePreviewImg.style.display = 'none';
                     liveCtx.clearRect(0, 0, livePreviewCanvas.width, livePreviewCanvas.height);
-                    setMarginInputs({ top: 0, bottom: 0, left: 0, right: 0 }, true); // Keep disabled
+                    setMarginInputs({ top: 0, bottom: 0, left: 0, right: 0 }, true);
                 } finally {
-                    // Update button state after loading attempt finishes (success or fail)
-                    updateGenerateButtonState();
+                     updateGenerateButtonState(); // Update button state
                 }
             } else { // Invalid preset index somehow
                  console.warn('[handlePresetChange] Invalid preset index selected:', selectedValue);
@@ -414,10 +405,18 @@ document.addEventListener('DOMContentLoaded', () => {
                  setMarginInputs({ top: 0, bottom: 0, left: 0, right: 0 }, true);
             }
         }
-        // Update button state after handling either custom or preset path
-        updateGenerateButtonState();
-        console.log('[handlePresetChange] Finished.'); // Debug
+        updateGenerateButtonState(); // Ensure button state updated after all paths
+        console.log('[handlePresetChange] Finished.');
     }
+
+    // --- Custom Template Upload function remains the same ---
+    // async function loadCustomTemplate(file) { ... }
+
+    // --- The rest of your script.js remains unchanged ---
+    // ... (Keep all other functions: loadCustomTemplate, populatePresets, loadImage, debounce, etc.) ...
+    // ... (Keep all event listeners: templateInput, sliders, batch upload, clear buttons, generateBtn) ...
+    // ... (Keep drawing functions: drawLivePreview, drawImageWithTransform, getCurrentTemplateSettings) ...
+    // ... (Keep initial setup calls) ...
 
     // Listener for Custom Template Upload Input
     templateInput.addEventListener('change', async (event) => {
