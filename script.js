@@ -53,13 +53,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Template Presets Definition ---
     const templatePresets = [
         {
-             name: "Blue Chalk (Image BG)", url: "templates/dog_inn_template.png", // The main template
+             name: "Blue Chalk", url: "templates/dog_inn_template.png", // The main template
              margins: { top: 18, bottom: 245, left: 15, right: 15 }, // Adjust if needed
              padding: { top: 20, bottom: 20, left: 20, right: 20 } // Adjust if needed
          },
         {
-             name: "Easter (Image BG)", url: "templates/2025Easter.png", // The main template
-             margins: { top: 100, bottom: 100, left: 35, right: 35 }, // Adjust if needed
+             name: "Easter", url: "templates/2025Easter.png", // The main template
+             margins: { top: 150, bottom: 50, left: 35, right: 35 }, // Adjust if needed
              padding: { top: 20, bottom: 20, left: 20, right: 20 }, // Adjust if needed
              background: { type: 'color', value: '#B7C8DC'}
          },
