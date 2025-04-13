@@ -1,9 +1,9 @@
 // FINAL script.js for use on GitHub Pages (or any HTTP server)
 // Uses FETCH for loading preset templates AND preset backgrounds to avoid canvas tainting.
-// Includes added logging for photo preview issues.
+// Corrects function definition duplications. Includes debugging logs.
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Get references ---
+    // --- Get references --- (Ensure all these IDs match your HTML)
     const photoBatchInput = document.getElementById('photoBatchInput');
     const clearAllPhotosBtn = document.getElementById('clearAllPhotosBtn');
     const clearSlotBtns = document.querySelectorAll('.clear-slot-btn');
@@ -51,25 +51,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let backgroundImageObject = null;
     let backgroundImagePreviewUrl = null;
 
-    // --- Template Presets Definition --- (Reflecting user's last provided version)
+    // --- Template Presets Definition --- (Using user's last provided version)
     const templatePresets = [
         {
-             name: "Blue Chalk", url: "templates/dog_inn_template.png", // The main template
-             margins: { top: 18, bottom: 245, left: 15, right: 15 }, // Adjust if needed
-             padding: { top: 20, bottom: 20, left: 20, right: 20 } // Adjust if needed
+             name: "Blue Chalk", url: "templates/dog_inn_template.png",
+             margins: { top: 18, bottom: 245, left: 15, right: 15 },
+             padding: { top: 20, bottom: 20, left: 20, right: 20 }
          },
         {
-             name: "Easter", url: "templates/2025Easter.png", // The main template
-             margins: { top: 100, bottom: 100, left: 35, right: 35 }, // Adjust if needed
-             padding: { top: 20, bottom: 20, left: 25, right: 25 }, // Adjust if needed
-             background: { type: 'color', value: '#B7C8DC'} // Light Blue/Grey color
+             name: "Easter", url: "templates/2025Easter.png",
+             margins: { top: 100, bottom: 100, left: 35, right: 35 },
+             padding: { top: 20, bottom: 20, left: 25, right: 25 },
+             background: { type: 'color', value: '#B7C8DC'}
          },
-         // Add other presets if needed
-        // {
-        //     name: "Square Border (10px)", url: "templates/square_border.png",
-        //     margins: { top: 10, bottom: 10, left: 10, right: 10 },
-        //     padding: { top: 0, bottom: 0, left: 0, right: 0 },
-        // },
     ];
 
     // --- Utilities ---
@@ -80,11 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimeout(timeout); timeout = setTimeout(later, wait);
         };
      }
-     function loadImage(src) { // src will be a data:URL from fetch or FileReader
+     function loadImage(src) {
         return new Promise((resolve, reject) => {
              const img = new Image();
              img.onload = () => resolve(img);
-             img.onerror = (err) => reject(new Error(`Failed image load: ${src.substring(0,100)}...`)); // Added ellipsis
+             img.onerror = (err) => reject(new Error(`Failed image load: ${src.substring(0,100)}...`));
              img.src = src;
          });
      }
@@ -94,52 +88,51 @@ document.addEventListener('DOMContentLoaded', () => {
           try {
              const transform = imageTransforms[index];
              const previewBg = previewBgs[index];
-             console.log(`[updatePreviewBackground] Index: ${index}, Found Element:`, !!previewBg, "Has dataUrl:", !!transform?.dataUrl); // DEBUG
-             if (!previewBg) return;
+             // DEBUG: Log details before attempting style update
+             console.log(`[updatePreviewBackground] Index: ${index}, Found Element: ${!!previewBg}, Has dataUrl: ${!!transform?.dataUrl}, Transform:`, transform);
+             if (!previewBg) { console.error(`Preview element for index ${index} not found!`); return; }
 
              if (transform && transform.dataUrl) {
-                 const imageUrl = `url(${transform.dataUrl})`;
-                 console.log(`[updatePreviewBackground] Setting background for index ${index}`); // DEBUG
-                 previewBg.style.backgroundImage = imageUrl;
+                 previewBg.style.backgroundImage = `url(${transform.dataUrl})`;
                  previewBg.style.backgroundSize = 'cover';
                  previewBg.style.backgroundPosition = `${transform.offsetX}% ${transform.offsetY}%`;
              } else {
-                 console.log(`[updatePreviewBackground] Clearing background for index ${index}`); // DEBUG
                  previewBg.style.backgroundImage = '';
              }
-         } catch (error) { console.error(`Error updatePreviewBg ${index}:`, error); }
+         } catch (error) { console.error(`Error in updatePreviewBackground for index ${index}:`, error); }
     }
 
     function setPhotoSlotState(index, file, dataUrl, imgObject) {
-         console.log(`[setPhotoSlotState] Index: ${index}, File: ${file?.name}, Has dataUrl: ${!!dataUrl}, Has imgObject: ${!!imgObject}`); // DEBUG
+         console.log(`[setPhotoSlotState] Index: ${index}, File: ${file?.name}, Has dataUrl: ${!!dataUrl}, Has imgObject: ${!!imgObject}`);
          photoFiles[index] = file;
-         imageTransforms[index].dataUrl = dataUrl; // Assign dataUrl here
+         imageTransforms[index].dataUrl = dataUrl; // ** Assign dataUrl FIRST **
          photoImageObjects[index] = imgObject;
 
          const hasImage = !!imgObject;
+         // Update Controls
          if (scaleSliders[index]) scaleSliders[index].disabled = !hasImage;
          if (offsetXSliders[index]) offsetXSliders[index].disabled = !hasImage;
          if (offsetYSliders[index]) offsetYSliders[index].disabled = !hasImage;
          if (clearSlotBtns[index]) clearSlotBtns[index].style.display = hasImage ? 'inline-block' : 'none';
 
+         // Reset Transforms state if image present
          if (hasImage) {
-            // Always reset transforms when a new image is successfully associated
             imageTransforms[index].scale = 1; imageTransforms[index].offsetX = 50; imageTransforms[index].offsetY = 50;
             if (scaleSliders[index]) scaleSliders[index].value = 1;
             if (offsetXSliders[index]) offsetXSliders[index].value = 50;
             if (offsetYSliders[index]) offsetYSliders[index].value = 50;
-         } else {
-             // Reset transforms if clearing
+         } else { // Clear transforms if no image
              imageTransforms[index].scale = 1; imageTransforms[index].offsetX = 50; imageTransforms[index].offsetY = 50;
              if (scaleSliders[index]) scaleSliders[index].value = 1;
              if (offsetXSliders[index]) offsetXSliders[index].value = 50;
              if (offsetYSliders[index]) offsetYSliders[index].value = 50;
          }
-         // CRITICAL: Update the specific preview BG AFTER setting the dataUrl
+
+         // ** Update the preview background AFTER state is set **
          updatePreviewBackground(index);
          updateGenerateButtonState();
-         drawLivePreview();
-         console.log(`[setPhotoSlotState] Completed for index ${index}. State:`, imageTransforms[index]); // DEBUG state after update
+         drawLivePreview(); // Update main preview
+         console.log(`[setPhotoSlotState] Completed for index ${index}.`);
     }
 
     function clearPhotoSlot(index) {
@@ -243,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Background Listeners
     bgTypeRadios.forEach(radio => {
         radio.addEventListener('change', (event) => {
-            if(activeTemplateSettings?.background) return; // Ignore if preset controls bg
+            if(activeTemplateSettings?.background) return;
             backgroundType = event.target.value;
             if (backgroundType === 'color') { bgImageSettingDiv.style.display = 'none'; bgColorSettingDiv.style.display = 'flex'; clearBackgroundImageState(); drawLivePreview(); }
             else { bgColorSettingDiv.style.display = 'none'; bgImageSettingDiv.style.display = 'block'; if (backgroundImageObject) { drawLivePreview(); } else { drawLivePreview(true); } }
@@ -273,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const dataUrl = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload=e=>resolve(e.target.result); r.onerror=reject; r.readAsDataURL(file); });
             backgroundImageObject = await loadImage(dataUrl);
             const previewBlob = await (await fetch(dataUrl)).blob();
-            if (backgroundImagePreviewUrl) URL.revokeObjectURL(backgroundImagePreviewUrl); // Revoke old before creating new
+            if (backgroundImagePreviewUrl) URL.revokeObjectURL(backgroundImagePreviewUrl);
             backgroundImagePreviewUrl = URL.createObjectURL(previewBlob);
             bgImagePreview.src = backgroundImagePreviewUrl; bgImagePreview.style.display = 'inline-block'; clearBgImageBtn.style.display = 'inline-block';
             statusElem.textContent = 'Background loaded.'; drawLivePreview();
@@ -295,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
             bgImagePreview.src = backgroundImagePreviewUrl; bgImagePreview.style.display = 'inline-block';
             clearBgImageBtn.style.display = 'none';
             return true; // Success
-        } catch (error) { console.error("Preset BG load err:", error); statusElem.textContent = `Err preset BG: ${error.message}`; clearBackgroundImageState(); throw error; } // Rethrow
+        } catch (error) { console.error("Preset BG load err:", error); statusElem.textContent = `Err preset BG: ${error.message}`; clearBackgroundImageState(); throw error; }
     }
 
     // Helper to clear background image state
@@ -307,8 +300,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (clearInput && bgImageInput) { bgImageInput.value = ''; }
     }
 
-    // --- ** UPDATED Template Loading (FETCH METHOD) ** ---
-    async function handlePresetChange() { // THIS IS THE CORRECT DEFINITION - REMOVE ANY DUPLICATES
+    // --- ** CORRECTED Template Loading (FETCH METHOD) ** ---
+    async function handlePresetChange() {
         const selectedValue = templatePresetSelect.value;
         console.log('[handlePresetChange (Fetch)] Started. Selected value:', selectedValue);
         templateImageObject = null; activeTemplateSettings = null; selectedTemplatePreviewImg.src = '#'; selectedTemplatePreviewImg.style.display = 'none'; liveCtx.clearRect(0, 0, livePreviewCanvas.width, livePreviewCanvas.height);
@@ -322,18 +315,27 @@ document.addEventListener('DOMContentLoaded', () => {
             statusElem.textContent = 'Upload custom template or select preset.'; templateFile = null;
             activeTemplateSettings = { type: 'custom', file: null, margins: currentMargins, padding: {top:0, bottom:0, left:0, right:0}, background: null };
             const potentialCustomFile = templateInput.files && templateInput.files[0];
-            if (potentialCustomFile) { await loadCustomTemplate(potentialCustomFile); } else { templateImageObject = null; drawLivePreview(); } // Draw default bg
+            if (potentialCustomFile) { await loadCustomTemplate(potentialCustomFile); }
+            else { templateImageObject = null; drawLivePreview(); } // Draw default bg
+
         } else {
+            // --- Handle Preset ---
             console.log('[handlePresetChange (Fetch)] Preset selected.');
             customTemplateUploadDiv.style.display = 'none'; gridMarginsContainer.style.display = 'block'; templateInput.value = '';
             const presetIndex = parseInt(selectedValue, 10); const preset = templatePresets[presetIndex];
             if (preset) {
                 console.log('[handlePresetChange (Fetch)] Loading preset:', preset.name);
-                setMarginInputs(preset.margins, true); statusElem.textContent = `Loading ${preset.name}...`; generateBtn.disabled = true; templateFile = preset.url;
-                activeTemplateSettings = { type: 'preset', url: preset.url, margins: { ...preset.margins }, padding: { ...(preset.padding || {}) }, background: preset.background ? { ...preset.background } : null };
+                setMarginInputs(preset.margins, true); // Set margin inputs visually FIRST
+                statusElem.textContent = `Loading ${preset.name}...`; generateBtn.disabled = true; templateFile = preset.url;
+                activeTemplateSettings = { // Initialize state object SECOND
+                     type: 'preset', url: preset.url,
+                     margins: { ...preset.margins },
+                     padding: { ...(preset.padding || { top:0, bottom:0, left:0, right:0 }) }, // Ensure padding exists
+                     background: preset.background ? { ...preset.background } : null
+                };
 
                 let templateLoadPromise = null;
-                let backgroundLoadPromise = Promise.resolve(true);
+                let backgroundLoadPromise = Promise.resolve(true); // Default
 
                 // Start Template Load
                 try {
@@ -373,11 +375,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 } finally {
                     updateGenerateButtonState();
                 }
+
             } else { statusElem.textContent='Invalid preset.'; templateFile=null; activeTemplateSettings=null; setMarginInputs({top:0,bottom:0,left:0,right:0},true); updateGenerateButtonState();}
         } // end else (preset handling)
 
         updateGenerateButtonState(); // Final update outside if/else
-        console.log('[handlePresetChange (Fetch)] Finished.');
+        //console.log('[handlePresetChange (Fetch)] Finished.');
     } // END OF handlePresetChange
 
     async function loadCustomTemplate(file) {
@@ -385,15 +388,15 @@ document.addEventListener('DOMContentLoaded', () => {
          customTemplateUploadDiv.style.display = 'block'; gridMarginsContainer.style.display = 'block';
          templateFile = file;
          statusElem.textContent = 'Loading custom...'; generateBtn.disabled = true; setMarginInputs({ top: 0, bottom: 0, left: 0, right: 0 }, true);
-         resetManualBackgroundControls(); // Ensure manual BG active
+         resetManualBackgroundControls();
 
          try {
-            const dataUrl = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload=(e)=>resolve(e.target.result); r.onerror=reject; r.readAsDataURL(file); });
+            const dataUrl = await new Promise((resolve, reject) => { const r=new FileReader(); r.onload=(e)=>resolve(e.target.result); r.onerror=reject; r.readAsDataURL(file); });
             templateImageObject = await loadImage(dataUrl);
             const currentMargins = { top: parseInt(gridMarginTopInput.value,10)||0, bottom: parseInt(gridMarginBottomInput.value,10)||0, left: parseInt(gridMarginLeftInput.value,10)||0, right: parseInt(gridMarginRightInput.value,10)||0 };
             activeTemplateSettings = { type: 'custom', file: file, margins: currentMargins, padding: {top:0, bottom:0, left:0, right:0}, background: null };
             statusElem.textContent = 'Custom loaded.'; selectedTemplatePreviewImg.src = templateImageObject.src; selectedTemplatePreviewImg.style.display = 'block';
-            setMarginInputs(activeTemplateSettings.margins, false); // Set potentially existing margins & *enable*
+            setMarginInputs(activeTemplateSettings.margins, false);
             drawLivePreview();
          } catch (error) { console.error("Custom load err:", error); statusElem.textContent = `Error: ${error.message}.`; templateFile=null; templateImageObject=null; activeTemplateSettings=null; selectedTemplatePreviewImg.src='#'; selectedTemplatePreviewImg.style.display='none'; liveCtx.clearRect(0,0,livePreviewCanvas.width,livePreviewCanvas.height); setMarginInputs({top:0,bottom:0,left:0,right:0}, false); resetManualBackgroundControls();}
          finally { updateGenerateButtonState(); }
@@ -402,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
      // Helpers to manage background control states
      function disableManualBackgroundControls() { bgTypeRadios.forEach(r=>r.disabled=true); bgColorPicker.disabled=true; bgImageInput.disabled=true; if(clearBgImageBtn) clearBgImageBtn.disabled=true; if(bgColorSettingDiv) {bgColorSettingDiv.style.opacity=0.6; bgColorSettingDiv.style.cursor='not-allowed';} if(bgImageSettingDiv) {bgImageSettingDiv.style.opacity=0.6; bgImageSettingDiv.style.cursor='not-allowed';} }
      function enableManualBackgroundControls() { bgTypeRadios.forEach(r=>r.disabled=false); bgColorPicker.disabled=false; bgImageInput.disabled=false; if(clearBgImageBtn) clearBgImageBtn.disabled=false; if(bgColorSettingDiv) {bgColorSettingDiv.style.opacity=1; bgColorSettingDiv.style.cursor='default';} if(bgImageSettingDiv) {bgImageSettingDiv.style.opacity=1; bgImageSettingDiv.style.cursor='default';} }
-     function resetManualBackgroundControls() { console.log("Resetting manual BG controls."); enableManualBackgroundControls(); backgroundType = 'color'; backgroundColor = '#FFFFFF'; if(document.getElementById('bgTypeColor')) document.getElementById('bgTypeColor').checked = true; if(bgColorPicker) bgColorPicker.value = backgroundColor; if(bgImageSettingDiv) bgImageSettingDiv.style.display = 'none'; if(bgColorSettingDiv) bgColorSettingDiv.style.display = 'flex'; clearBackgroundImageState(); }
+     function resetManualBackgroundControls() { /*console.log("Resetting manual BG controls.");*/ enableManualBackgroundControls(); backgroundType = 'color'; backgroundColor = '#FFFFFF'; if(document.getElementById('bgTypeColor')) document.getElementById('bgTypeColor').checked = true; if(bgColorPicker) bgColorPicker.value = backgroundColor; if(bgImageSettingDiv) bgImageSettingDiv.style.display = 'none'; if(bgColorSettingDiv) bgColorSettingDiv.style.display = 'flex'; clearBackgroundImageState(); }
 
 
     // --- Slider handler ---
@@ -416,23 +419,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateGenerateButtonState = () => {
           const photosReadyCount = photoImageObjects.filter(img => img !== null).length;
          const templateReady = templateImageObject !== null;
-         const newState = !(photosReadyCount > 0 && templateReady); // Still require template
+         const newState = !(photosReadyCount > 0 && templateReady);
          if (generateBtn.disabled !== newState) { generateBtn.disabled = newState; }
      };
 
     // --- Get Settings Helper ---
     function getCurrentSettings() {
         let margins = { top: 0, bottom: 0, left: 0, right: 0 }; let padding = { top: 0, bottom: 0, left: 0, right: 0 };
-        let bg = { type: backgroundType, colorValue: backgroundColor, imageObject: backgroundImageObject }; // Default to manual
+        let bg = { type: backgroundType, colorValue: backgroundColor, imageObject: backgroundImageObject };
         if (activeTemplateSettings) {
              margins = { ...activeTemplateSettings.margins }; padding = { ...(activeTemplateSettings.padding || { top:0, bottom:0, left:0, right:0 }) };
-             if(activeTemplateSettings.background) { // Use preset BG if defined
+             if(activeTemplateSettings.background) {
                  if(activeTemplateSettings.background.type === 'color') { bg = { type: 'color', colorValue: activeTemplateSettings.background.value || '#FFFFFF', imageObject: null }; }
                  else if (activeTemplateSettings.background.type === 'image') { bg = { type: 'image', colorValue: '#FFFFFF', imageObject: backgroundImageObject }; }
-             } else if (activeTemplateSettings.type === 'custom') { // Custom template, use manual BG + inputs for margin
+             } else if (activeTemplateSettings.type === 'custom') {
                  margins = { top: parseInt(gridMarginTopInput.value,10)||0, bottom: parseInt(gridMarginBottomInput.value,10)||0, left: parseInt(gridMarginLeftInput.value,10)||0, right: parseInt(gridMarginRightInput.value,10)||0 };
-                 activeTemplateSettings.margins = margins; // Sync state
-             } // Else: preset w/o bg, use manual bg state already set in 'bg'
+                 activeTemplateSettings.margins = margins;
+             }
         } else { console.warn("getCurrentSettings: activeTemplateSettings is null."); }
         return { margins, padding, background: bg };
      }
@@ -449,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Draw Background
         if (background.type === 'image' && background.imageObject) { drawImageCover(liveCtx, background.imageObject, 0, 0, canvasW, canvasH); }
         else { liveCtx.fillStyle = background.colorValue || '#FFFFFF'; liveCtx.fillRect(0, 0, canvasW, canvasH); }
-        // Draw Grid & Photos (Only if template ready)
+        // Draw Grid & Photos
         if(templateReady) {
             const gridAreaX=margins.left; const gridAreaY=margins.top; const gridAreaWidth=canvasW-margins.left-margins.right; const gridAreaHeight=canvasH-margins.top-margins.bottom;
             if (gridAreaWidth<=0 || gridAreaHeight<=0) { liveCtx.drawImage(templateImageObject, 0, 0, canvasW, canvasH); console.warn("Preview Invalid grid"); liveCtx.strokeStyle='rgba(255,0,0,0.7)'; liveCtx.lineWidth=4; liveCtx.strokeRect(gridAreaX,gridAreaY,gridAreaWidth,gridAreaHeight); return; }
@@ -508,10 +511,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initial Page Setup ---
     function populatePresets() {
+        console.log("Populating presets..."); // DEBUG
         // Ensure custom option exists
-        if (!templatePresetSelect.querySelector('option[value="custom"]')) { const o=document.createElement('option'); o.value='custom'; o.textContent='-- Custom Upload --'; templatePresetSelect.insertBefore(o, templatePresetSelect.firstChild); }
-        // Add presets
-        templatePresets.forEach((preset, index) => { const o=document.createElement('option'); o.value=index.toString(); o.textContent=preset.name; templatePresetSelect.appendChild(o); });
+        if (!templatePresetSelect.querySelector('option[value="custom"]')) {
+            console.log("Adding custom option..."); // DEBUG
+            const customOption = document.createElement('option');
+            customOption.value = 'custom';
+            customOption.textContent = '-- Custom Upload --';
+            templatePresetSelect.insertBefore(customOption, templatePresetSelect.firstChild);
+        } else {
+            console.log("Custom option already exists."); // DEBUG
+        }
+        // Add presets from array
+        templatePresets.forEach((preset, index) => {
+            const option = document.createElement('option');
+            option.value = index.toString();
+            option.textContent = preset.name;
+            templatePresetSelect.appendChild(option);
+            console.log(`Added preset option: ${preset.name}`); // DEBUG
+        });
+        console.log("Calling initial handlePresetChange..."); // DEBUG
         handlePresetChange(); // Initialize
     }
     console.log("DOM Loaded. Initializing...");
