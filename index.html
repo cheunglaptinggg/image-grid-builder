@@ -10,25 +10,26 @@
     <h1>Image Grid Builder (2x2)</h1>
 
     <div class="instructions">
-        <p>1. **Upload Photos:** Use the button below to select up to 4 photos at once.</p>
-        <p>2. Adjust Scale (Zoom) and Position (X/Y Offset) for each photo.</p>
-        <p>3. **Choose Template:** Select a preset or upload a custom transparent PNG.</p>
-        <p>4. **(If Custom Template):** Define Grid Area Margins.</p>
-        <p>5. Adjustments are shown in the **Live Preview** below.</p>
-        <p>6. Generate!</p>
+        <p>1. **Upload Photos:** Use the button below to select up to 4 photos.</p>
+        <p>2. Adjust Scale/Position for each photo.</p>
+        <p>3. **Choose Template:** Select a preset or upload a custom PNG.</p>
+        <p>4. **(If Custom):** Define Grid Area Margins.</p>
+        <p>5. **(Optional) Choose Background:** Set a color or image behind everything.</p>
+        <p>6. Adjustments shown in Live Preview.</p>
+        <p>7. Generate!</p>
     </div>
 
     <div class="main-container">
         <div class="upload-section">
+            <!-- Upload & Adjust Photos section -->
             <h2>Upload & Adjust Photos</h2>
             <div class="photo-upload-area">
                  <label for="photoBatchInput">Upload Photos (Select 1-4 files):</label>
                  <input type="file" id="photoBatchInput" accept="image/*" multiple>
                  <button id="clearAllPhotosBtn" class="secondary-button">Clear All Photos</button>
             </div>
-
             <div class="photo-grid-editor">
-                <!-- Photo Slots 1-4 -->
+                 <!-- Photo Slot 1 -->
                  <div class="photo-slot" data-index="0">
                      <div class="slot-header">
                           <span>Photo 1 (Top-Left)</span>
@@ -44,6 +45,7 @@
                           <input type="range" id="offsetY0" class="offset-slider-y" data-index="0" min="0" max="100" step="1" value="50" disabled>
                      </div>
                  </div>
+                 <!-- Photo Slot 2 -->
                  <div class="photo-slot" data-index="1">
                       <div class="slot-header">
                            <span>Photo 2 (Top-Right)</span>
@@ -59,6 +61,7 @@
                            <input type="range" id="offsetY1" class="offset-slider-y" data-index="1" min="0" max="100" step="1" value="50" disabled>
                       </div>
                   </div>
+                  <!-- Photo Slot 3 -->
                   <div class="photo-slot" data-index="2">
                       <div class="slot-header">
                            <span>Photo 3 (Bottom-Left)</span>
@@ -74,6 +77,7 @@
                            <input type="range" id="offsetY2" class="offset-slider-y" data-index="2" min="0" max="100" step="1" value="50" disabled>
                        </div>
                   </div>
+                  <!-- Photo Slot 4 -->
                   <div class="photo-slot" data-index="3">
                       <div class="slot-header">
                            <span>Photo 4 (Bottom-Right)</span>
@@ -91,72 +95,98 @@
                   </div>
             </div> <!-- End photo-grid-editor -->
 
+            <!-- Template Section -->
             <h2>Select Template & Define Grid Area</h2>
             <div class="template-section">
-                <div class="template-selection">
-                    <div class="preset-selector">
-                         <label for="templatePresets">Choose Preset Template:</label>
-                         <select id="templatePresets">
-                              <option value="custom">-- Custom Upload --</option>
-                              <!-- Options will be populated by JS -->
-                         </select>
-                         <!-- NEW: Small Template Preview Area -->
-                         <div class="selected-template-preview-area">
-                             <img id="selectedTemplatePreviewImg" src="#" alt="Selected Template Preview" class="template-preview-small">
+                 <div class="template-selection">
+                     <div class="preset-selector">
+                          <label for="templatePresets">Choose Preset Template:</label>
+                          <select id="templatePresets">
+                               <option value="custom">-- Custom Upload --</option> <!-- Essential Static Option -->
+                               <!-- Options populated by JS -->
+                          </select>
+                          <div class="selected-template-preview-area">
+                              <img id="selectedTemplatePreviewImg" src="#" alt="Selected Template Preview" class="template-preview-small">
+                          </div>
+                     </div>
+                     <div class="template-upload" id="customTemplateUpload">
+                          <label for="template">Upload Custom Template (PNG)</label>
+                          <input type="file" id="template" accept="image/png">
+                     </div>
+                 </div>
+                 <div class="grid-margins" id="gridMarginsContainer">
+                     <p>Grid Area Margins (pixels inside template):</p>
+                     <div class="margin-inputs">
+                         <div class="margin-input-group">
+                             <label for="gridMarginTop">Top:</label>
+                             <input type="number" id="gridMarginTop" value="0" min="0" step="1">
                          </div>
-                    </div>
-                    <div class="template-upload" id="customTemplateUpload">
-                         <label for="template">Upload Custom Template (PNG)</label>
-                         <input type="file" id="template" accept="image/png">
-                         <!-- Using the small preview now for consistency
-                         <img id="previewTemplate" src="#" alt="Template Preview" class="preview-img template-preview">
-                         -->
-                    </div>
-                </div>
-
-                <div class="grid-margins" id="gridMarginsContainer">
-                    <p>Grid Area Margins (pixels inside template):</p>
-                    <div class="margin-inputs">
-                        <!-- Margin Inputs -->
-                        <div class="margin-input-group">
-                            <label for="gridMarginTop">Top:</label>
-                            <input type="number" id="gridMarginTop" value="0" min="0" step="1">
-                        </div>
-                        <div class="margin-input-group">
-                            <label for="gridMarginBottom">Bottom:</label>
-                            <input type="number" id="gridMarginBottom" value="0" min="0" step="1">
-                        </div>
-                        <div class="margin-input-group">
-                             <label for="gridMarginLeft">Left:</label>
-                            <input type="number" id="gridMarginLeft" value="0" min="0" step="1">
-                        </div>
-                        <div class="margin-input-group">
-                             <label for="gridMarginRight">Right:</label>
-                            <input type="number" id="gridMarginRight" value="0" min="0" step="1">
-                        </div>
-                    </div>
-                     <small>Define the space from the template edge to the 2x2 photo grid.</small>
-                </div>
+                         <div class="margin-input-group">
+                             <label for="gridMarginBottom">Bottom:</label>
+                             <input type="number" id="gridMarginBottom" value="0" min="0" step="1">
+                         </div>
+                         <div class="margin-input-group">
+                              <label for="gridMarginLeft">Left:</label>
+                             <input type="number" id="gridMarginLeft" value="0" min="0" step="1">
+                         </div>
+                         <div class="margin-input-group">
+                              <label for="gridMarginRight">Right:</label>
+                             <input type="number" id="gridMarginRight" value="0" min="0" step="1">
+                         </div>
+                     </div>
+                      <small>Define the space from the template edge to the 2x2 photo grid.</small>
+                 </div>
             </div> <!-- End template-section -->
+
+            <!-- Background Options Section -->
+            <h2>Choose Background</h2>
+            <div class="background-options-section">
+                <div class="background-type-selector">
+                    <label>Background Type:</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="backgroundType" value="color" id="bgTypeColor" checked> Color
+                        </label>
+                        <label>
+                            <input type="radio" name="backgroundType" value="image" id="bgTypeImage"> Image
+                        </label>
+                    </div>
+                </div>
+                <div class="background-setting" id="bgColorSetting">
+                    <label for="bgColorPicker">Background Color:</label>
+                    <input type="color" id="bgColorPicker" value="#FFFFFF"> <!-- Default white -->
+                </div>
+                <div class="background-setting" id="bgImageSetting" style="display: none;">
+                    <label for="bgImageInput">Background Image:</label>
+                    <input type="file" id="bgImageInput" accept="image/*">
+                    <div class="bg-image-preview-area">
+                        <img id="bgImagePreview" src="#" alt="Background Preview" class="bg-image-preview-small">
+                    </div>
+                     <button id="clearBgImageBtn" class="secondary-button clear-bg-btn" style="display: none;">Clear Background Image</button>
+                </div>
+            </div> <!-- End background-options-section -->
+
         </div> <!-- End upload-section -->
 
         <div class="action-section">
-            <!-- NEW: Live Preview Canvas -->
+            <!-- Live Preview section -->
             <h2>Live Preview</h2>
             <div class="live-preview-container">
-                 <canvas id="livePreviewCanvas"></canvas>
+                 <canvas id="livePreviewCanvas"></canvas> <!-- Canvas must be here -->
             </div>
 
             <button id="generateBtn" disabled>Generate Image</button>
             <p id="status">Upload photos and select a template.</p>
+
+             <!-- Result Display section -->
             <div class="result-display">
-                <h2>Result</h2>
-                <canvas id="canvas" style="display: none;"></canvas> <!-- Keep hidden final canvas -->
-                <img id="resultImage" src="#" alt="Generated Image Result" class="result-img">
-                <p id="mobileSaveHint" class="mobile-hint" style="display: none;">
-                    <small><b>On mobile?</b> Tap and hold the image above, then select 'Save Image' or 'Download Image'.</small>
-                </p>
-                <a id="downloadLink" href="#" download="generated-image.png" style="display: none;">Download Image</a>
+                 <h2>Result</h2>
+                 <canvas id="canvas" style="display: none;"></canvas> <!-- Hidden final canvas -->
+                 <img id="resultImage" src="#" alt="Generated Image Result" class="result-img">
+                 <p id="mobileSaveHint" class="mobile-hint" style="display: none;">
+                     <small><b>On mobile?</b> Tap and hold the image above, then select 'Save Image' or 'Download Image'.</small>
+                 </p>
+                 <a id="downloadLink" href="#" download="generated-image.jpeg" style="display: none;">Download Image</a> <!-- Changed to jpeg -->
             </div>
         </div>
     </div> <!-- End main-container -->
