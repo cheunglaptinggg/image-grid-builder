@@ -245,81 +245,161 @@ document.addEventListener('DOMContentLoaded', () => {
         if (clearInput && bgImageInput) { bgImageInput.value = ''; }
     }
 
-    // --- Template Loading (Using FETCH Method) ---
-    async function handlePresetChange() {
-        const selectedValue = templatePresetSelect.value;
-        console.log('[handlePresetChange (Fetch)] Started. Selected value:', selectedValue);
-        templateImageObject = null; activeTemplateSettings = null; selectedTemplatePreviewImg.src = '#'; selectedTemplatePreviewImg.style.display = 'none'; liveCtx.clearRect(0, 0, livePreviewCanvas.width, livePreviewCanvas.height);
-        resetManualBackgroundControls(); // Start with manual BG enabled
+    // Replace the handlePresetChange and getCurrentSettings functions
+// in your existing script.js with these versions.
 
-        if (selectedValue === 'custom') {
-            console.log('[handlePresetChange (Fetch)] Custom selected.');
-            customTemplateUploadDiv.style.display = 'block'; gridMarginsContainer.style.display = 'block'; setMarginInputs({ top: 0, bottom: 0, left: 0, right: 0 }, false);
-            statusElem.textContent = 'Upload custom template or select preset.'; templateFile = null;
-            activeTemplateSettings = { type: 'custom', file: null, margins: {top:0, bottom:0, left:0, right:0}, padding: {top:0, bottom:0, left:0, right:0}, background: null };
-            const potentialCustomFile = templateInput.files && templateInput.files[0];
-            if (potentialCustomFile) { await loadCustomTemplate(potentialCustomFile); } else { templateImageObject = null; drawLivePreview(); } // Draw default bg if no file
-        } else {
-            console.log('[handlePresetChange (Fetch)] Preset selected.');
-            customTemplateUploadDiv.style.display = 'none'; gridMarginsContainer.style.display = 'block'; templateInput.value = '';
-            const presetIndex = parseInt(selectedValue, 10); const preset = templatePresets[presetIndex];
-            if (preset) {
-                console.log('[handlePresetChange (Fetch)] Loading preset:', preset.name);
-                setMarginInputs(preset.margins, true); statusElem.textContent = `Loading ${preset.name}...`; generateBtn.disabled = true; templateFile = preset.url;
-                activeTemplateSettings = { type: 'preset', url: preset.url, margins: { ...preset.margins }, padding: { ...(preset.padding || {}) }, background: preset.background ? { ...preset.background } : null };
+// --- ** REFINED Template Loading (Ensuring Settings Update) ** ---
+async function handlePresetChange() {
+    const selectedValue = templatePresetSelect.value;
+    console.log('[handlePresetChange] Started. Selected value:', selectedValue);
+    // Reset core template state
+    templateImageObject = null;
+    activeTemplateSettings = null; // *** Crucial: Reset this fully at the start ***
+    selectedTemplatePreviewImg.src = '#'; selectedTemplatePreviewImg.style.display = 'none';
+    liveCtx.clearRect(0, 0, livePreviewCanvas.width, livePreviewCanvas.height);
+    resetManualBackgroundControls(); // Reset background controls every time selection changes
 
-                let templateLoadPromise = null;
-                let backgroundLoadPromise = Promise.resolve(true); // Default to resolved for Promise.all
+    if (selectedValue === 'custom') {
+        console.log('[handlePresetChange] Custom selected.');
+        customTemplateUploadDiv.style.display = 'block'; gridMarginsContainer.style.display = 'block';
+        const currentMargins = { // Read potentially pre-existing custom values
+             top: parseInt(gridMarginTopInput.value, 10) || 0, bottom: parseInt(gridMarginBottomInput.value, 10) || 0,
+             left: parseInt(gridMarginLeftInput.value, 10) || 0, right: parseInt(gridMarginRightInput.value, 10) || 0
+         };
+        setMarginInputs(currentMargins, false); // Ensure margins are enabled and reflect current values
+        statusElem.textContent = 'Upload custom template or select preset.'; templateFile = null;
+        activeTemplateSettings = { // Set initial state for custom
+            type: 'custom', file: null,
+            margins: currentMargins, // Store potentially existing values
+            padding: { top: 0, bottom: 0, left: 0, right: 0 }, // Custom templates default to no padding
+            background: null
+        };
+        const potentialCustomFile = templateInput.files && templateInput.files[0];
+        if (potentialCustomFile) { await loadCustomTemplate(potentialCustomFile); }
+        else { templateImageObject = null; drawLivePreview(); } // Draw default bg if no file
 
-                // Start Template Load (Fetch -> DataURL -> LoadImage)
-                try {
-                    console.log('[handlePresetChange (Fetch)] Fetching TPL:', preset.url);
-                    const response = await fetch(preset.url); if (!response.ok) { throw new Error(`Fetch fail ${response.status} TPL: ${preset.url}`); }
-                    const imageBlob = await response.blob();
-                    const dataUrl = await new Promise((resolve, reject) => { const r=new FileReader(); r.onloadend=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(imageBlob); });
-                    templateLoadPromise = loadImage(dataUrl); // Assign promise
-                } catch(error) { console.error("Preset TPL fetch/load err:", error); statusElem.textContent=`Err TPL: ${error.message}`; templateImageObject = null; activeTemplateSettings = null; updateGenerateButtonState(); return; }
+    } else {
+        // --- Handle Preset ---
+        console.log('[handlePresetChange] Preset selected.');
+        customTemplateUploadDiv.style.display = 'none'; gridMarginsContainer.style.display = 'block'; templateInput.value = '';
+        const presetIndex = parseInt(selectedValue, 10); const preset = templatePresets[presetIndex];
+        if (preset) {
+            console.log('[handlePresetChange] Loading preset:', preset.name);
+            // *** Set the disabled margin inputs to EXACTLY the preset values ***
+            setMarginInputs(preset.margins, true);
+            statusElem.textContent = `Loading ${preset.name}...`; generateBtn.disabled = true; templateFile = preset.url;
 
-                 // Start Background Load IF specified
-                if (activeTemplateSettings.background?.type === 'image') {
-                     console.log('Preset has image background, starting load:', activeTemplateSettings.background.url);
-                     backgroundLoadPromise = loadPresetBackgroundImage(activeTemplateSettings.background.url); // Assign promise from helper
-                     disableManualBackgroundControls();
-                 } else if (activeTemplateSettings.background?.type === 'color') {
-                      console.log('Preset has color background:', activeTemplateSettings.background.value);
-                      backgroundType = 'color'; backgroundColor = activeTemplateSettings.background.value;
-                      document.getElementById('bgTypeColor').checked = true; bgColorPicker.value = backgroundColor;
-                      disableManualBackgroundControls();
-                      // Background is ready, no async load needed
-                 } else {
-                     // No preset background, ensure manual controls enabled (already done by reset)
-                 }
+            // *** Initialize activeTemplateSettings with EXACT preset values ***
+            activeTemplateSettings = {
+                 type: 'preset',
+                 url: preset.url,
+                 margins: { ...preset.margins }, // Copy margins
+                 padding: { ...(preset.padding || { top: 0, bottom: 0, left: 0, right: 0 }) }, // Copy padding or use default
+                 background: preset.background ? { ...preset.background } : null // Copy background if exists
+             };
 
-                // Wait for BOTH template and (potentially) background image
-                try {
-                    console.log("Awaiting template and potential background load...");
-                    [templateImageObject] = await Promise.all([templateLoadPromise, backgroundLoadPromise]); // backgroundLoadPromise resolves immediately if no bg image needed
-                    console.log("All loading finished. Template Obj:", !!templateImageObject, "BG Obj:", !!backgroundImageObject);
-                    selectedTemplatePreviewImg.src = templateImageObject.src; selectedTemplatePreviewImg.style.display = 'block';
-                    // Update status based on whether BG was also loaded
-                    if (activeTemplateSettings.background) { statusElem.textContent = `Preset "${preset.name}" and background loaded.`; }
-                    else { statusElem.textContent = `Preset "${preset.name}" loaded.`; }
-                    drawLivePreview(); // Draw everything now
-                } catch (error) {
-                     console.error("Error awaiting image loads:", error);
-                     // Status was likely set by the failing load function
-                     templateImageObject = null; backgroundImageObject = null; activeTemplateSettings = null;
-                     resetManualBackgroundControls(); // Re-enable controls on error
-                     drawLivePreview(true); // Draw white BG
-                } finally {
-                    updateGenerateButtonState();
-                }
+            let templateLoadPromise = null;
+            let backgroundLoadPromise = Promise.resolve(true); // Default to resolved
 
-            } else { /* Invalid preset index */ statusElem.textContent='Invalid preset.'; templateFile=null; activeTemplateSettings=null; setMarginInputs({top:0,bottom:0,left:0,right:0},true); }
-        }
-        updateGenerateButtonState(); console.log('[handlePresetChange (Fetch)] Finished.');
+            // Start Template Load (Fetch -> DataURL -> LoadImage)
+            try {
+                const response = await fetch(preset.url); if (!response.ok) { throw new Error(`Fetch fail ${response.status} TPL: ${preset.url}`); }
+                const imageBlob = await response.blob();
+                const dataUrl = await new Promise((resolve, reject) => { const r=new FileReader(); r.onloadend=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(imageBlob); });
+                templateLoadPromise = loadImage(dataUrl);
+            } catch(error) { console.error("Preset TPL fetch/load err:", error); statusElem.textContent=`Err TPL: ${error.message}`; templateImageObject = null; activeTemplateSettings = null; updateGenerateButtonState(); return; }
+
+             // Start Background Load IF specified in preset
+            if (activeTemplateSettings.background?.type === 'image') {
+                 backgroundLoadPromise = loadPresetBackgroundImage(activeTemplateSettings.background.url);
+                 disableManualBackgroundControls();
+             } else if (activeTemplateSettings.background?.type === 'color') {
+                  backgroundType = 'color'; backgroundColor = activeTemplateSettings.background.value;
+                  document.getElementById('bgTypeColor').checked = true; bgColorPicker.value = backgroundColor;
+                  disableManualBackgroundControls();
+             }
+             // Else: No preset background, controls already reset/enabled
+
+            // Wait for both loads
+            try {
+                [templateImageObject] = await Promise.all([templateLoadPromise, backgroundLoadPromise]);
+                console.log("Preset images loaded. TPL:", !!templateImageObject, "BG:", !!backgroundImageObject);
+                selectedTemplatePreviewImg.src = templateImageObject.src; selectedTemplatePreviewImg.style.display = 'block';
+                statusElem.textContent = activeTemplateSettings.background ? `Preset "${preset.name}" & BG loaded.` : `Preset "${preset.name}" loaded.`;
+                drawLivePreview(); // Draw with correct, loaded settings
+            } catch (error) {
+                 console.error("Error awaiting preset image loads:", error);
+                 templateImageObject = null; backgroundImageObject = null; activeTemplateSettings = null;
+                 resetManualBackgroundControls(); drawLivePreview(true);
+            } finally {
+                updateGenerateButtonState();
+            }
+
+        } else { /* Invalid preset index handling */ statusElem.textContent='Invalid preset.'; templateFile=null; activeTemplateSettings=null; setMarginInputs({top:0,bottom:0,left:0,right:0},true); }
+    }
+    updateGenerateButtonState(); console.log('[handlePresetChange] Finished.');
+}
+
+// --- ** REFINED Get Settings Helper ** ---
+// Ensures it always uses the activeTemplateSettings state when available
+function getCurrentSettings() {
+    let margins = { top: 0, bottom: 0, left: 0, right: 0 };
+    let padding = { top: 0, bottom: 0, left: 0, right: 0 };
+    let bg = { type: backgroundType, colorValue: backgroundColor, imageObject: backgroundImageObject }; // Default to current manual state
+
+    if (activeTemplateSettings) { // If a template setting object exists (preset or custom)
+         margins = { ...activeTemplateSettings.margins }; // Use margins from stored state
+         padding = { ...(activeTemplateSettings.padding || { top:0, bottom:0, left:0, right:0 }) }; // Use padding from stored state
+
+         if(activeTemplateSettings.background) { // Preset background overrides manual state
+             if(activeTemplateSettings.background.type === 'color') {
+                 bg = { type: 'color', colorValue: activeTemplateSettings.background.value, imageObject: null };
+             } else if (activeTemplateSettings.background.type === 'image') {
+                 bg = { type: 'image', colorValue: '#FFFFFF', imageObject: backgroundImageObject }; // Use the loaded image object state
+             }
+         } else if (activeTemplateSettings.type === 'custom') {
+             // Custom template selected, but NO preset background is active.
+             // Therefore, use the current MANUAL background state (already set as default for 'bg')
+             // Ensure margins are read from input fields for custom type if needed
+             margins = {
+                 top: parseInt(gridMarginTopInput.value, 10) || 0,
+                 bottom: parseInt(gridMarginBottomInput.value, 10) || 0,
+                 left: parseInt(gridMarginLeftInput.value, 10) || 0,
+                 right: parseInt(gridMarginRightInput.value, 10) || 0
+             };
+             activeTemplateSettings.margins = margins; // Update state object just in case
+         }
+         // Else (preset with no defined background): Use default 'bg' which reflects manual controls
+    } else {
+        // Fallback if somehow activeTemplateSettings is null (e.g., initial error)
+        console.warn("getCurrentSettings: activeTemplateSettings is null. Using defaults.");
     }
 
+    return { margins, padding, background: bg };
+}
+
+// --- Keep ALL other functions below this line the same ---
+// loadCustomTemplate, loadPresetBackgroundImage, loadManualBackgroundImage,
+// clearBackgroundImageState, disable/enable/resetManualBackgroundControls,
+// handleSliderChange, updateGenerateButtonState, drawLivePreview, generateBtn listener,
+// drawImageCover, populatePresets, Initial Setup calls etc.
+
+// --- Make sure these helpers still exist and are correct ---
+// function disableManualBackgroundControls() { ... }
+// function enableManualBackgroundControls() { ... }
+// function resetManualBackgroundControls() { ... }
+// async function loadCustomTemplate(file) { ... }
+// async function loadPresetBackgroundImage(url) { ... }
+// async function loadManualBackgroundImage(file) { ... }
+// function clearBackgroundImageState(clearInput = true) { ... }
+// function updateGenerateButtonState() { ... };
+// function drawLivePreview(forceWhiteBg = false) { ... }
+// generateBtn.addEventListener('click', () => { ... });
+// function drawImageCover(targetCtx, img, targetX, targetY, targetW, targetH, offsetXPercent = 50, offsetYPercent = 50, zoomScale = 1) { ... }
+// function populatePresets() { ... }
+// console.log("DOM Loaded. Initializing...");
+// populatePresets();
+// console.log("Initialization complete.");
     async function loadCustomTemplate(file) {
          templateImageObject = null; selectedTemplatePreviewImg.src = '#'; selectedTemplatePreviewImg.style.display = 'none'; liveCtx.clearRect(0, 0, livePreviewCanvas.width, livePreviewCanvas.height);
          customTemplateUploadDiv.style.display = 'block'; gridMarginsContainer.style.display = 'block';
