@@ -1,5 +1,6 @@
 // FINAL script.js for use on GitHub Pages (or any HTTP server)
 // Uses FETCH for loading preset templates AND preset backgrounds to avoid canvas tainting.
+// Includes added logging for photo preview issues.
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Get references ---
@@ -71,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // },
     ];
 
-
     // --- Utilities ---
     function debounce(func, wait) {
         let timeout;
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return new Promise((resolve, reject) => {
              const img = new Image();
              img.onload = () => resolve(img);
-             img.onerror = (err) => reject(new Error(`Failed image load: ${src.substring(0,100)}`));
+             img.onerror = (err) => reject(new Error(`Failed image load: ${src.substring(0,100)}...`)); // Added ellipsis
              img.src = src;
          });
      }
@@ -92,35 +92,56 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- UI / State Updates ---
     function updatePreviewBackground(index) {
           try {
-             const transform = imageTransforms[index]; const previewBg = previewBgs[index];
+             const transform = imageTransforms[index];
+             const previewBg = previewBgs[index];
+             console.log(`[updatePreviewBackground] Index: ${index}, Found Element:`, !!previewBg, "Has dataUrl:", !!transform?.dataUrl); // DEBUG
              if (!previewBg) return;
+
              if (transform && transform.dataUrl) {
-                 previewBg.style.backgroundImage = `url(${transform.dataUrl})`;
+                 const imageUrl = `url(${transform.dataUrl})`;
+                 console.log(`[updatePreviewBackground] Setting background for index ${index}`); // DEBUG
+                 previewBg.style.backgroundImage = imageUrl;
                  previewBg.style.backgroundSize = 'cover';
                  previewBg.style.backgroundPosition = `${transform.offsetX}% ${transform.offsetY}%`;
-             } else { previewBg.style.backgroundImage = ''; }
+             } else {
+                 console.log(`[updatePreviewBackground] Clearing background for index ${index}`); // DEBUG
+                 previewBg.style.backgroundImage = '';
+             }
          } catch (error) { console.error(`Error updatePreviewBg ${index}:`, error); }
     }
+
     function setPhotoSlotState(index, file, dataUrl, imgObject) {
-         photoFiles[index] = file; imageTransforms[index].dataUrl = dataUrl; photoImageObjects[index] = imgObject;
+         console.log(`[setPhotoSlotState] Index: ${index}, File: ${file?.name}, Has dataUrl: ${!!dataUrl}, Has imgObject: ${!!imgObject}`); // DEBUG
+         photoFiles[index] = file;
+         imageTransforms[index].dataUrl = dataUrl; // Assign dataUrl here
+         photoImageObjects[index] = imgObject;
+
          const hasImage = !!imgObject;
          if (scaleSliders[index]) scaleSliders[index].disabled = !hasImage;
          if (offsetXSliders[index]) offsetXSliders[index].disabled = !hasImage;
          if (offsetYSliders[index]) offsetYSliders[index].disabled = !hasImage;
          if (clearSlotBtns[index]) clearSlotBtns[index].style.display = hasImage ? 'inline-block' : 'none';
+
          if (hasImage) {
+            // Always reset transforms when a new image is successfully associated
             imageTransforms[index].scale = 1; imageTransforms[index].offsetX = 50; imageTransforms[index].offsetY = 50;
             if (scaleSliders[index]) scaleSliders[index].value = 1;
             if (offsetXSliders[index]) offsetXSliders[index].value = 50;
             if (offsetYSliders[index]) offsetYSliders[index].value = 50;
          } else {
+             // Reset transforms if clearing
              imageTransforms[index].scale = 1; imageTransforms[index].offsetX = 50; imageTransforms[index].offsetY = 50;
              if (scaleSliders[index]) scaleSliders[index].value = 1;
              if (offsetXSliders[index]) offsetXSliders[index].value = 50;
              if (offsetYSliders[index]) offsetYSliders[index].value = 50;
          }
-         updatePreviewBackground(index); updateGenerateButtonState(); drawLivePreview();
+         // CRITICAL: Update the specific preview BG AFTER setting the dataUrl
+         updatePreviewBackground(index);
+         updateGenerateButtonState();
+         drawLivePreview();
+         console.log(`[setPhotoSlotState] Completed for index ${index}. State:`, imageTransforms[index]); // DEBUG state after update
     }
+
     function clearPhotoSlot(index) {
         if (photoFiles[index] !== null || photoImageObjects[index] !== null) { setPhotoSlotState(index, null, null, null); statusElem.textContent = `Slot ${index+1} cleared.`; }
     }
@@ -143,25 +164,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners ---
     photoBatchInput.addEventListener('change', async (event) => {
+         console.log('Batch input change detected.'); // DEBUG
           const files = event.target.files; if (!files || files.length === 0) return;
          let filesToProcess = Array.from(files); let loadedCount = 0; let erroredCount = 0; let assignedCount = 0;
          statusElem.textContent = `Processing ${filesToProcess.length}...`; generateBtn.disabled = true;
          const processingPromises = [];
+
+         console.log(`Attempting to assign ${filesToProcess.length} files.`); // DEBUG
          for (const file of filesToProcess) {
              let targetSlotIndex = -1; for (let j=0; j<MAX_PHOTOS; j++) { if (photoFiles[j] === null && photoImageObjects[j] === null) { targetSlotIndex = j; break; } }
+             console.log(`Checking for empty slot. Found index: ${targetSlotIndex}`); // DEBUG
+
              if (targetSlotIndex !== -1 && assignedCount < MAX_PHOTOS) {
-                 assignedCount++; const currentIndex = targetSlotIndex; photoFiles[currentIndex] = 'pending';
+                 assignedCount++; const currentIndex = targetSlotIndex;
+                 console.log(`Assigning "${file?.name || 'Unknown File'}" to slot ${currentIndex}`); // DEBUG
+                 photoFiles[currentIndex] = 'pending'; // Mark synchronously
+
                  processingPromises.push(new Promise((resolve) => {
                      const reader = new FileReader();
-                     reader.onload = async (e) => { try { const dataUrl = e.target.result; const img = await loadImage(dataUrl); setPhotoSlotState(currentIndex, file, dataUrl, img); loadedCount++; resolve(true); } catch (loadError) { console.error(`Err load img ${currentIndex}:`, loadError); setPhotoSlotState(currentIndex, null, null, null); erroredCount++; resolve(false); } };
-                     reader.onerror = (err) => { console.error(`Err read file ${currentIndex}:`, err); setPhotoSlotState(currentIndex, null, null, null); erroredCount++; resolve(false); }
+                     reader.onload = async (e) => {
+                        const dataUrl = e.target.result; // Get dataUrl here
+                        console.log(`[FileReader onload] Index ${currentIndex}, dataUrl obtained (length ${dataUrl?.length})`); // DEBUG
+                        if(!dataUrl) {
+                             console.error(`[FileReader onload] FileReader failed for ${file?.name}, no dataUrl.`);
+                             setPhotoSlotState(currentIndex, null, null, null); // Clear slot
+                             erroredCount++;
+                             resolve(false);
+                             return;
+                         }
+                         try {
+                             const img = await loadImage(dataUrl);
+                             console.log(`[loadImage success] Index ${currentIndex}`); // DEBUG
+                             setPhotoSlotState(currentIndex, file, dataUrl, img); // Update state
+                             loadedCount++;
+                             resolve(true);
+                         } catch (loadError) {
+                             console.error(`[loadImage error] Index ${currentIndex}:`, loadError);
+                             setPhotoSlotState(currentIndex, null, null, null); // Clear slot on error
+                             erroredCount++;
+                             resolve(false);
+                         }
+                     };
+                     reader.onerror = (err) => {
+                         console.error(`[FileReader onerror] Index ${currentIndex}:`, err);
+                         setPhotoSlotState(currentIndex, null, null, null); // Clear slot on error
+                         erroredCount++;
+                         resolve(false);
+                     }
                      reader.readAsDataURL(file);
                  }));
-             } else if (targetSlotIndex === -1) { break; }
-         }
-         try { await Promise.all(processingPromises); } catch (error) { console.error('Err awaiting promises:', error); }
+             } else if (targetSlotIndex === -1) { console.log('No more empty slots found.'); break; }
+             else { console.log(`Skipping file, max assigned: ${assignedCount}`); }
+         } // End file loop
+
+        try { await Promise.all(processingPromises); console.log('All photo processing promises settled.'); }
+        catch (error) { console.error('Error awaiting processing promises:', error); }
+
          let finalStatus = `Processed: Loaded ${loadedCount}, Failed ${erroredCount}.`; const excessFiles = files.length - assignedCount; if (excessFiles > 0) { finalStatus += ` ${excessFiles} ignored (max ${MAX_PHOTOS}).`; }
          statusElem.textContent = finalStatus; updateGenerateButtonState(); photoBatchInput.value = '';
+         console.log('Batch upload processing complete.');
     });
     clearSlotBtns.forEach(btn => btn.addEventListener('click', (event) => clearPhotoSlot(parseInt(event.target.dataset.index, 10))));
     clearAllPhotosBtn.addEventListener('click', clearAllPhotoSlots);
@@ -212,6 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const dataUrl = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload=e=>resolve(e.target.result); r.onerror=reject; r.readAsDataURL(file); });
             backgroundImageObject = await loadImage(dataUrl);
             const previewBlob = await (await fetch(dataUrl)).blob();
+            if (backgroundImagePreviewUrl) URL.revokeObjectURL(backgroundImagePreviewUrl); // Revoke old before creating new
             backgroundImagePreviewUrl = URL.createObjectURL(previewBlob);
             bgImagePreview.src = backgroundImagePreviewUrl; bgImagePreview.style.display = 'inline-block'; clearBgImageBtn.style.display = 'inline-block';
             statusElem.textContent = 'Background loaded.'; drawLivePreview();
@@ -221,45 +283,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Helper to load PRESET background image (using fetch)
     async function loadPresetBackgroundImage(url) {
-        clearBackgroundImageState(false); backgroundImageFile = url; // Store URL identifier
+        clearBackgroundImageState(false); backgroundImageFile = url;
         statusElem.textContent = 'Loading preset background...'; generateBtn.disabled = true;
         try {
-            // Fetch preset background
             const response = await fetch(url); if (!response.ok) { throw new Error(`Fetch fail: ${response.status} for BG ${url}`); }
             const imageBlob = await response.blob();
             const dataUrl = await new Promise((resolve, reject) => { const r=new FileReader(); r.onloadend=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(imageBlob); });
-            backgroundImageObject = await loadImage(dataUrl); // Load Image from dataURL
-
-            // Update preview using the Blob to avoid re-fetching if needed later
+            backgroundImageObject = await loadImage(dataUrl);
             if (backgroundImagePreviewUrl) URL.revokeObjectURL(backgroundImagePreviewUrl);
-            backgroundImagePreviewUrl = URL.createObjectURL(imageBlob); // Use blob for preview
+            backgroundImagePreviewUrl = URL.createObjectURL(imageBlob);
             bgImagePreview.src = backgroundImagePreviewUrl; bgImagePreview.style.display = 'inline-block';
-            clearBgImageBtn.style.display = 'none'; // Hide manual clear button for presets
-
-            // statusElem.textContent = 'Preset background loaded.'; // Status set in handlePresetChange after Promise.all
-            // Don't call drawLivePreview here, wait for Promise.all in handlePresetChange
-            return true; // Indicate success
-
-        } catch (error) { console.error("Preset BG load err:", error); statusElem.textContent = `Err preset BG: ${error.message}`; clearBackgroundImageState(); throw error; } // Rethrow to be caught by Promise.all
-        // finally { updateGenerateButtonState(); } // State updated after Promise.all
+            clearBgImageBtn.style.display = 'none';
+            return true; // Success
+        } catch (error) { console.error("Preset BG load err:", error); statusElem.textContent = `Err preset BG: ${error.message}`; clearBackgroundImageState(); throw error; } // Rethrow
     }
 
     // Helper to clear background image state
     function clearBackgroundImageState(clearInput = true) {
-        if (backgroundImagePreviewUrl) { URL.revokeObjectURL(backgroundImagePreviewUrl); /*console.log("Revoked bg preview URL")*/; }
+        if (backgroundImagePreviewUrl) { URL.revokeObjectURL(backgroundImagePreviewUrl); }
         backgroundImageFile = null; backgroundImageObject = null; backgroundImagePreviewUrl = null;
         if(bgImagePreview) { bgImagePreview.src = '#'; bgImagePreview.style.display = 'none'; }
         if(clearBgImageBtn) clearBgImageBtn.style.display = 'none';
         if (clearInput && bgImageInput) { bgImageInput.value = ''; }
     }
 
-
     // --- ** UPDATED Template Loading (FETCH METHOD) ** ---
-    async function handlePresetChange() {
+    async function handlePresetChange() { // THIS IS THE CORRECT DEFINITION - REMOVE ANY DUPLICATES
         const selectedValue = templatePresetSelect.value;
         console.log('[handlePresetChange (Fetch)] Started. Selected value:', selectedValue);
         templateImageObject = null; activeTemplateSettings = null; selectedTemplatePreviewImg.src = '#'; selectedTemplatePreviewImg.style.display = 'none'; liveCtx.clearRect(0, 0, livePreviewCanvas.width, livePreviewCanvas.height);
-        resetManualBackgroundControls(); // Reset/enable manual BG controls by default
+        resetManualBackgroundControls(); // Reset/enable manual BG
 
         if (selectedValue === 'custom') {
             console.log('[handlePresetChange (Fetch)] Custom selected.');
@@ -269,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             statusElem.textContent = 'Upload custom template or select preset.'; templateFile = null;
             activeTemplateSettings = { type: 'custom', file: null, margins: currentMargins, padding: {top:0, bottom:0, left:0, right:0}, background: null };
             const potentialCustomFile = templateInput.files && templateInput.files[0];
-            if (potentialCustomFile) { await loadCustomTemplate(potentialCustomFile); } else { templateImageObject = null; drawLivePreview(); } // Draw default bg if no file
+            if (potentialCustomFile) { await loadCustomTemplate(potentialCustomFile); } else { templateImageObject = null; drawLivePreview(); } // Draw default bg
         } else {
             console.log('[handlePresetChange (Fetch)] Preset selected.');
             customTemplateUploadDiv.style.display = 'none'; gridMarginsContainer.style.display = 'block'; templateInput.value = '';
@@ -280,74 +333,63 @@ document.addEventListener('DOMContentLoaded', () => {
                 activeTemplateSettings = { type: 'preset', url: preset.url, margins: { ...preset.margins }, padding: { ...(preset.padding || {}) }, background: preset.background ? { ...preset.background } : null };
 
                 let templateLoadPromise = null;
-                let backgroundLoadPromise = Promise.resolve(true); // Default resolve
+                let backgroundLoadPromise = Promise.resolve(true);
 
-                // Start Template Load (Fetch)
+                // Start Template Load
                 try {
                     console.log('[handlePresetChange (Fetch)] Fetching TPL:', preset.url);
                     const response = await fetch(preset.url); if (!response.ok) { throw new Error(`Fetch fail ${response.status} TPL: ${preset.url}`); }
                     const imageBlob = await response.blob();
                     const dataUrl = await new Promise((resolve, reject) => { const r=new FileReader(); r.onloadend=()=>resolve(r.result); r.onerror=reject; r.readAsDataURL(imageBlob); });
-                    templateLoadPromise = loadImage(dataUrl); // Get promise
+                    templateLoadPromise = loadImage(dataUrl);
                 } catch(error) { console.error("Preset TPL fetch/load err:", error); statusElem.textContent=`Err TPL: ${error.message}`; templateImageObject = null; activeTemplateSettings = null; resetManualBackgroundControls(); updateGenerateButtonState(); return; }
 
-                 // Start Background Load (Fetch) IF specified
+                 // Start Background Load IF specified
                 if (activeTemplateSettings.background?.type === 'image' && activeTemplateSettings.background.url) {
                      console.log('Preset has image background, starting load:', activeTemplateSettings.background.url);
-                     backgroundLoadPromise = loadPresetBackgroundImage(activeTemplateSettings.background.url); // Get promise
+                     backgroundLoadPromise = loadPresetBackgroundImage(activeTemplateSettings.background.url);
                      disableManualBackgroundControls();
                  } else if (activeTemplateSettings.background?.type === 'color') {
                       console.log('Preset has color background:', activeTemplateSettings.background.value);
-                      backgroundType = 'color'; backgroundColor = activeTemplateSettings.background.value || '#FFFFFF'; // Use value or default white
-                      if (document.getElementById('bgTypeColor')) document.getElementById('bgTypeColor').checked = true; // Check radio
-                      if (bgColorPicker) bgColorPicker.value = backgroundColor; // Update picker
-                      disableManualBackgroundControls(); // Disable manual controls
-                      // backgroundLoadPromise remains resolved (no async load needed)
-                 } else {
-                     // No preset background defined, manual controls remain enabled
+                      backgroundType = 'color'; backgroundColor = activeTemplateSettings.background.value || '#FFFFFF';
+                      if (document.getElementById('bgTypeColor')) document.getElementById('bgTypeColor').checked = true;
+                      if (bgColorPicker) bgColorPicker.value = backgroundColor;
+                      disableManualBackgroundControls();
                  }
 
-                // Wait for BOTH loads to settle
+                // Wait for BOTH loads
                 try {
                     console.log("Awaiting template and potential background load...");
-                    // We only strictly need the templateImageObject from the Promise.all result
                     [templateImageObject] = await Promise.all([templateLoadPromise, backgroundLoadPromise]);
-                    console.log("All loading finished. Template Obj:", !!templateImageObject, "BG Obj:", !!backgroundImageObject);
-
-                    if (!templateImageObject) throw new Error("Template image failed to load after await."); // Add check
-
+                    console.log("All loading finished. TPL:", !!templateImageObject, "BG:", !!backgroundImageObject);
+                    if (!templateImageObject) throw new Error("Template image failed to load after await.");
                     selectedTemplatePreviewImg.src = templateImageObject.src; selectedTemplatePreviewImg.style.display = 'block';
                     statusElem.textContent = activeTemplateSettings.background ? `Preset "${preset.name}" & BG loaded.` : `Preset "${preset.name}" loaded.`;
                     drawLivePreview(); // Draw everything now
-
-                } catch (error) { // Catch errors from Promise.all or individual loads if rethrown
-                     console.error("Error awaiting image loads:", error);
-                     statusElem.textContent = `Error during load: ${error.message}`; // Show error
-                     templateImageObject = null; backgroundImageObject = null; activeTemplateSettings = null; // Reset fully
-                     resetManualBackgroundControls(); // Re-enable controls on error
-                     drawLivePreview(); // Redraw (likely just blank or white)
+                } catch (error) {
+                     console.error("Error awaiting image loads:", error); statusElem.textContent = `Error during load: ${error.message}`;
+                     templateImageObject = null; backgroundImageObject = null; activeTemplateSettings = null;
+                     resetManualBackgroundControls(); drawLivePreview(); // Redraw blank
                 } finally {
-                    updateGenerateButtonState(); // Update button state regardless
+                    updateGenerateButtonState();
                 }
+            } else { statusElem.textContent='Invalid preset.'; templateFile=null; activeTemplateSettings=null; setMarginInputs({top:0,bottom:0,left:0,right:0},true); updateGenerateButtonState();}
+        } // end else (preset handling)
 
-            } else { /* Invalid preset index */ statusElem.textContent='Invalid preset.'; templateFile=null; activeTemplateSettings=null; setMarginInputs({top:0,bottom:0,left:0,right:0},true); updateGenerateButtonState();}
-        } else { // Custom path finish
-           updateGenerateButtonState();
-        }
-       // console.log('[handlePresetChange (Fetch)] Finished.'); // Debug log removed for brevity
-    }
+        updateGenerateButtonState(); // Final update outside if/else
+        console.log('[handlePresetChange (Fetch)] Finished.');
+    } // END OF handlePresetChange
 
     async function loadCustomTemplate(file) {
          templateImageObject = null; selectedTemplatePreviewImg.src = '#'; selectedTemplatePreviewImg.style.display = 'none'; liveCtx.clearRect(0, 0, livePreviewCanvas.width, livePreviewCanvas.height);
          customTemplateUploadDiv.style.display = 'block'; gridMarginsContainer.style.display = 'block';
          templateFile = file;
          statusElem.textContent = 'Loading custom...'; generateBtn.disabled = true; setMarginInputs({ top: 0, bottom: 0, left: 0, right: 0 }, true);
-         resetManualBackgroundControls(); // Enable manual BG
+         resetManualBackgroundControls(); // Ensure manual BG active
 
          try {
             const dataUrl = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload=(e)=>resolve(e.target.result); r.onerror=reject; r.readAsDataURL(file); });
             templateImageObject = await loadImage(dataUrl);
-            // For custom, read initial margin values from potentially existing inputs
             const currentMargins = { top: parseInt(gridMarginTopInput.value,10)||0, bottom: parseInt(gridMarginBottomInput.value,10)||0, left: parseInt(gridMarginLeftInput.value,10)||0, right: parseInt(gridMarginRightInput.value,10)||0 };
             activeTemplateSettings = { type: 'custom', file: file, margins: currentMargins, padding: {top:0, bottom:0, left:0, right:0}, background: null };
             statusElem.textContent = 'Custom loaded.'; selectedTemplatePreviewImg.src = templateImageObject.src; selectedTemplatePreviewImg.style.display = 'block';
@@ -382,16 +424,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function getCurrentSettings() {
         let margins = { top: 0, bottom: 0, left: 0, right: 0 }; let padding = { top: 0, bottom: 0, left: 0, right: 0 };
         let bg = { type: backgroundType, colorValue: backgroundColor, imageObject: backgroundImageObject }; // Default to manual
-
         if (activeTemplateSettings) {
-             margins = { ...activeTemplateSettings.margins };
-             padding = { ...(activeTemplateSettings.padding || { top:0, bottom:0, left:0, right:0 }) };
-
+             margins = { ...activeTemplateSettings.margins }; padding = { ...(activeTemplateSettings.padding || { top:0, bottom:0, left:0, right:0 }) };
              if(activeTemplateSettings.background) { // Use preset BG if defined
-                 if(activeTemplateSettings.background.type === 'color') { bg = { type: 'color', colorValue: activeTemplateSettings.background.value || '#FFFFFF', imageObject: null }; } // Use value or white fallback
-                 else if (activeTemplateSettings.background.type === 'image') { bg = { type: 'image', colorValue: '#FFFFFF', imageObject: backgroundImageObject }; } // Use loaded bg image state
-             } else if (activeTemplateSettings.type === 'custom') {
-                 // Custom template, NO preset BG -> ensure margins are from inputs
+                 if(activeTemplateSettings.background.type === 'color') { bg = { type: 'color', colorValue: activeTemplateSettings.background.value || '#FFFFFF', imageObject: null }; }
+                 else if (activeTemplateSettings.background.type === 'image') { bg = { type: 'image', colorValue: '#FFFFFF', imageObject: backgroundImageObject }; }
+             } else if (activeTemplateSettings.type === 'custom') { // Custom template, use manual BG + inputs for margin
                  margins = { top: parseInt(gridMarginTopInput.value,10)||0, bottom: parseInt(gridMarginBottomInput.value,10)||0, left: parseInt(gridMarginLeftInput.value,10)||0, right: parseInt(gridMarginRightInput.value,10)||0 };
                  activeTemplateSettings.margins = margins; // Sync state
              } // Else: preset w/o bg, use manual bg state already set in 'bg'
@@ -414,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Draw Grid & Photos (Only if template ready)
         if(templateReady) {
             const gridAreaX=margins.left; const gridAreaY=margins.top; const gridAreaWidth=canvasW-margins.left-margins.right; const gridAreaHeight=canvasH-margins.top-margins.bottom;
-            if (gridAreaWidth<=0 || gridAreaHeight<=0) { liveCtx.drawImage(templateImageObject, 0, 0, canvasW, canvasH); console.warn("Preview Invalid grid"); /*...*/ return; }
+            if (gridAreaWidth<=0 || gridAreaHeight<=0) { liveCtx.drawImage(templateImageObject, 0, 0, canvasW, canvasH); console.warn("Preview Invalid grid"); liveCtx.strokeStyle='rgba(255,0,0,0.7)'; liveCtx.lineWidth=4; liveCtx.strokeRect(gridAreaX,gridAreaY,gridAreaWidth,gridAreaHeight); return; }
             const quadW=gridAreaWidth/2; const quadH=gridAreaHeight/2; const basePos = [ { x:gridAreaX,y:gridAreaY}, {x:gridAreaX+quadW,y:gridAreaY}, {x:gridAreaX,y:gridAreaY+quadH}, {x:gridAreaX+quadW,y:gridAreaY+quadH} ];
             photoImageObjects.forEach((img,i)=>{ if(img){ const t=imageTransforms[i]; const p=basePos[i]; const dX=p.x+padding.left; const dY=p.y+padding.top; const dW=quadW-padding.left-padding.right; const dH=quadH-padding.top-padding.bottom; if(dW>0 && dH>0) drawImageCover(liveCtx,img,dX,dY,dW,dH,t.offsetX,t.offsetY,t.scale); } });
             liveCtx.drawImage(templateImageObject, 0, 0, canvasW, canvasH);
