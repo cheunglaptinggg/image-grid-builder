@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
              padding: { top: 20, bottom: 20, left: 20, right: 20 } // Adjust if needed
          },
         {
-             name: "Easter (Image BG)", url: "templates/dog_inn_template.png", // The main template
+             name: "Easter (Image BG)", url: "templates/2025Easter.png", // The main template
              margins: { top: 18, bottom: 245, left: 15, right: 15 }, // Adjust if needed
              padding: { top: 20, bottom: 20, left: 20, right: 20 }, // Adjust if needed
              background: { type: 'color', value: '#B7C8DC'}
