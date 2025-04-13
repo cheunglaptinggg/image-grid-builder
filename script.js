@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
          },
         {
              name: "Easter", url: "templates/2025Easter.png", // The main template
-             margins: { top: 150, bottom: 50, left: 35, right: 35 }, // Adjust if needed
+             margins: { top: 250, bottom: 50, left: 35, right: 35 }, // Adjust if needed
              padding: { top: 20, bottom: 20, left: 20, right: 20 }, // Adjust if needed
              background: { type: 'color', value: '#B7C8DC'}
          },
