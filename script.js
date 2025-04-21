@@ -491,24 +491,75 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 50);
     });
 
-    // --- Core Drawing Function ---
+    // --- *** UPDATED CORE DRAWING FUNCTION: drawImageCover (Revised Panning) *** ---
+    /**
+     * Draws an image scaled uniformly to cover the target area using clipping.
+     * offsetX/Y sliders now control which part of the source image is centered.
+     */
     function drawImageCover(targetCtx, img, targetX, targetY, targetW, targetH, offsetXPercent = 50, offsetYPercent = 50, zoomScale = 1) {
-        if (!img || !targetCtx || targetW <= 0 || targetH <= 0 || img.naturalWidth === 0 || img.naturalHeight === 0) { console.warn("Draw invalid params"); return; }
-        const imgWidth = img.naturalWidth; const imgHeight = img.naturalHeight; const imgRatio = imgWidth / imgHeight; const targetRatio = targetW / targetH;
-        let scale = 1; if (imgRatio > targetRatio) { scale = targetH / imgHeight; } else { scale = targetW / imgWidth; }
-        const finalScale = scale * Math.max(1, zoomScale);
-        const scaledImgW = imgWidth * finalScale; const scaledImgH = imgHeight * finalScale;
-        const overflowX = scaledImgW - targetW; const overflowY = scaledImgH - targetH;
-        const drawX = targetX - (overflowX * (offsetXPercent / 100)); const drawY = targetY - (overflowY * (offsetYPercent / 100));
+        if (!img || !targetCtx || targetW <= 0 || targetH <= 0 || img.naturalWidth === 0 || img.naturalHeight === 0) {
+            console.warn("drawImageCover: Invalid parameters or image."); return;
+        }
+
+        const imgWidth = img.naturalWidth;
+        const imgHeight = img.naturalHeight;
+        const imgRatio = imgWidth / imgHeight;
+        const targetRatio = targetW / targetH;
+
+        // --- 1. Calculate Scale to Cover ---
+        let baseScale = 1;
+        if (imgRatio > targetRatio) { // Image wider than target -> fit height
+            baseScale = targetH / imgHeight;
+        } else { // Image taller than target -> fit width
+            baseScale = targetW / imgWidth;
+        }
+
+        // --- 2. Apply Zoom ---
+        const finalScale = baseScale * Math.max(1, zoomScale);
+        const scaledImgW = imgWidth * finalScale;
+        const scaledImgH = imgHeight * finalScale;
+
+        // --- 3. Calculate Draw Position Based on Offset % ---
+        // Calculate the minimum X/Y draw coordinates (when image edge aligns with target edge)
+        const minDrawX = targetX + targetW - scaledImgW;
+        const minDrawY = targetY + targetH - scaledImgH;
+        // Calculate the maximum X/Y draw coordinates (top/left edges aligned)
+        const maxDrawX = targetX;
+        const maxDrawY = targetY;
+
+        // Determine the draw position using linear interpolation based on the offset sliders
+        // 0% -> maxDraw (top/left edge)
+        // 100% -> minDraw (bottom/right edge)
+        // Ensure we don't go beyond calculated min/max if image is smaller than target after scaling (shouldn't happen with zoom >= 1)
+        let drawX = maxDrawX + (minDrawX - maxDrawX) * (offsetXPercent / 100);
+        let drawY = maxDrawY + (minDrawY - maxDrawY) * (offsetYPercent / 100);
+
+        // Ensure draw positions are valid numbers
+         if (isNaN(drawX)) drawX = targetX + (targetW - scaledImgW) / 2; // Center fallback for X
+         if (isNaN(drawY)) drawY = targetY + (targetH - scaledImgH) / 2; // Center fallback for Y
+
+
+        // --- 4. Apply Clipping and Draw ---
         targetCtx.save();
         try {
-            targetCtx.beginPath(); targetCtx.rect(targetX, targetY, targetW, targetH); targetCtx.clip();
-            if (isNaN(drawX) || isNaN(drawY) || isNaN(scaledImgW) || isNaN(scaledImgH) || scaledImgW <= 0 || scaledImgH <= 0 ) { console.error("Draw NaN", {drawX, drawY, scaledImgW, scaledImgH}); }
-            else { targetCtx.drawImage( img, 0, 0, imgWidth, imgHeight, drawX, drawY, scaledImgW, scaledImgH ); }
-        } catch (e) { console.error("Draw err:", e); }
-        finally { targetCtx.restore(); }
-    }
+            targetCtx.beginPath();
+            targetCtx.rect(targetX, targetY, targetW, targetH); // Clip to the target area
+            targetCtx.clip();
 
+            if (isNaN(scaledImgW) || isNaN(scaledImgH) || scaledImgW <= 0 || scaledImgH <= 0 ) {
+                 console.error("drawImageCover: Invalid scaled dimensions.", {scaledImgW, scaledImgH});
+             } else {
+                // Draw the entire source image, scaled, at the calculated position
+                targetCtx.drawImage(
+                    img,
+                    0, 0, imgWidth, imgHeight, // Source rect (full image)
+                    drawX, drawY,           // Calculated Destination position
+                    scaledImgW, scaledImgH   // Calculated Destination size
+                );
+            }
+        } catch (e) { console.error("Draw err:", e); }
+        finally { targetCtx.restore(); } // Remove clip
+    }
     // --- Initial Page Setup ---
     function populatePresets() {
         console.log("Populating presets..."); // DEBUG
