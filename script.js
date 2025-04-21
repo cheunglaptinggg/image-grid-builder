@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
          },
         {
              name: "Easter", url: "templates/2025Easter.png",
-             margins: { top: 115, bottom: 105, left: 55, right: 55 },
+             margins: { top: 135, bottom: 135, left: 55, right: 55 },
              padding: { top: 60, bottom: 60, left: 30, right: 30 },
              background: { type: 'color', value: '#B7C8DC'}
          },
