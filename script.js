@@ -64,6 +64,12 @@ document.addEventListener('DOMContentLoaded', () => {
              padding: { top: 95, bottom: 105, left: 60, right: 60 },
              background: { type: 'color', value: '#B7C8DC'}
          },
+        {
+             name: "Blue Sky", url: "templates/BlueSky-top.png",
+             margins: { top: 205, bottom: 205, left: 75, right: 75 },
+             padding: { top: 95, bottom: 105, left: 60, right: 60 },
+             background: { type: 'image', url: 'templates/BlueSky-bg.png' } // Example background image - MAKE SURE THIS FILE EXISTS!
+         },
     ];
 
     // --- Utilities ---
