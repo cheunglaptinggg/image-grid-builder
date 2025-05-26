@@ -1,7 +1,7 @@
 // FINAL script.js for use on GitHub Pages (or any HTTP server)
 // Uses FETCH for loading preset templates AND preset backgrounds to avoid canvas tainting.
 // Corrects function definition duplications. Includes debugging logs.
-// Fixes handling of preset.url === null
+// Fixes handling of preset.url === null and ensures templatePresetSelect listener is present.
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- Get references --- (Ensure all these IDs match your HTML)
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const scaleSliders = document.querySelectorAll('.scale-slider');
     const offsetXSliders = document.querySelectorAll('.offset-slider-x');
     const offsetYSliders = document.querySelectorAll('.offset-slider-y');
-    const templatePresetSelect = document.getElementById('templatePresets');
+    const templatePresetSelect = document.getElementById('templatePresets'); // Ensure this ID is correct
     const customTemplateUploadDiv = document.getElementById('customTemplateUpload');
     const templateInput = document.getElementById('template');
     const selectedTemplatePreviewImg = document.getElementById('selectedTemplatePreviewImg');
@@ -96,6 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
     photoBatchInput.addEventListener('change', async (event) => { /* ... */ });
     clearSlotBtns.forEach(btn => btn.addEventListener('click', (event) => clearPhotoSlot(parseInt(event.target.dataset.index, 10))));
     clearAllPhotosBtn.addEventListener('click', clearAllPhotoSlots);
+    // *** THIS IS THE CRITICAL LISTENER FOR THE DROPDOWN ***
+    if (templatePresetSelect) { // Add a null check for safety
+        templatePresetSelect.addEventListener('change', handlePresetChange);
+    } else {
+        console.error("ERROR: templatePresetSelect element not found in HTML!");
+    }
     templateInput.addEventListener('change', async (event) => { /* ... */ });
     scaleSliders.forEach(slider => slider.addEventListener('input', handleSliderChange));
     offsetXSliders.forEach(slider => slider.addEventListener('input', handleSliderChange));
@@ -119,8 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- ** CORRECTED Template Loading (FETCH METHOD with robust null URL check) ** ---
-    templatePresetSelect.addEventListener('change', handlePresetChange); // Keep this listener
-
     async function handlePresetChange() {
         const selectedValue = templatePresetSelect.value;
         console.log('[handlePresetChange (Fetch)] Started. Selected value:', selectedValue);
@@ -160,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
 
                 let templateLoadPromise;
-                // *** CRITICAL FIX: Only attempt fetch if preset.url is a truthy string ***
                 if (preset.url && typeof preset.url === 'string' && preset.url.trim() !== '') {
                     try {
                         console.log('[handlePresetChange (Fetch)] Fetching TPL:', preset.url);
@@ -172,13 +175,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     } catch(error) {
                         console.error("Preset TPL fetch/load err:", error); statusElem.textContent=`Err TPL: ${error.message}`;
                         templateImageObject = null;
-                        templateLoadPromise = Promise.resolve(null); // Ensure promise resolves for Promise.all
+                        templateLoadPromise = Promise.resolve(null);
                     }
                 } else {
                     console.log('[handlePresetChange (Fetch)] No valid template URL for this preset. Skipping template load.');
                     templateImageObject = null;
                     if(selectedTemplatePreviewImg) { selectedTemplatePreviewImg.src = '#'; selectedTemplatePreviewImg.style.display = 'none'; }
-                    templateLoadPromise = Promise.resolve(null); // Signify no template overlay
+                    templateLoadPromise = Promise.resolve(null);
                 }
 
                 let backgroundLoadPromise = Promise.resolve(true);
@@ -194,11 +197,10 @@ document.addEventListener('DOMContentLoaded', () => {
                       disableManualBackgroundControls();
                  }
 
-                // Wait for BOTH loads
                 try {
                     console.log("Awaiting template and potential background load...");
-                    const [loadedTemplateResult] = await Promise.all([templateLoadPromise, backgroundLoadPromise]);
-                    templateImageObject = loadedTemplateResult; // This can be null if preset.url was null/empty
+                    const [loadedTemplate] = await Promise.all([templateLoadPromise, backgroundLoadPromise]);
+                    templateImageObject = loadedTemplate;
 
                     console.log("All loading finished. TPL:", !!templateImageObject, "BG:", !!backgroundImageObject);
 
@@ -206,12 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         selectedTemplatePreviewImg.src = templateImageObject.src;
                         selectedTemplatePreviewImg.style.display = 'block';
                     }
-                    // Update status
                     if (!templateImageObject && activeTemplateSettings.background) { statusElem.textContent = `Preset "${preset.name}" (BG Only) loaded.`; }
                     else if (templateImageObject && activeTemplateSettings.background) { statusElem.textContent = `Preset "${preset.name}" & BG loaded.`; }
                     else if (templateImageObject) { statusElem.textContent = `Preset "${preset.name}" loaded.`; }
                     else { statusElem.textContent = `Preset "${preset.name}" (no content) selected.`; }
-
                     drawLivePreview();
                 } catch (error) {
                      console.error("Error awaiting image loads:", error); statusElem.textContent = `Error during load: ${error.message}`;
@@ -238,9 +238,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function drawImageCover(targetCtx, img, targetX, targetY, targetW, targetH, offsetXPercent = 50, offsetYPercent = 50, zoomScale = 1) { /* ... same as before ... */ }
 
     // --- Initial Page Setup ---
-    function populatePresets() { /* ... same as before ... */ }
+    function populatePresets() {
+        console.log("Populating presets...");
+        if (templatePresetSelect && !templatePresetSelect.querySelector('option[value="custom"]')) { // Add null check
+            console.log("Adding custom option...");
+            const customOption = document.createElement('option'); customOption.value = 'custom'; customOption.textContent = '-- Custom Upload --';
+            templatePresetSelect.insertBefore(customOption, templatePresetSelect.firstChild);
+        } else if (templatePresetSelect) { console.log("Custom option already exists or templatePresetSelect is null."); }
+        else { console.error("populatePresets: templatePresetSelect element not found!"); return; } // Exit if select not found
+
+        templatePresets.forEach((preset, index) => { const option = document.createElement('option'); option.value = index.toString(); option.textContent = preset.name; templatePresetSelect.appendChild(option); console.log(`Added preset option: ${preset.name}`); });
+        console.log("Calling initial handlePresetChange from populatePresets...");
+        handlePresetChange(); // Initialize
+    }
     console.log("DOM Loaded. Initializing...");
-    populatePresets();
+    populatePresets(); // This is the one and only call
     console.log("Initialization complete.");
 
 }); // End DOMContentLoaded
