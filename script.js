@@ -597,7 +597,6 @@ console.log("Calling initial handlePresetChange..."); // DEBUG
 handlePresetChange(); // Initialize
 }
 console.log("DOM Loaded. Initializing...");
-populatePresets();
 console.log("Initialization complete.");
 
 }); // End DOMContentLoaded
