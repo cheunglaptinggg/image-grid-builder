@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
              background: { type: 'image', url: 'templates/BlueSky-bg.png' } // Example background image - MAKE SURE THIS FILE EXISTS!
          },
          {
-             name: "School",
+             name: "School",url: null,
              margins: { top: 330, bottom: 340, left: 120 , right: 120 },
              padding: { top: 20, bottom: 20, left: 20, right: 20 },
              background: { type: 'image', url: 'templates/School.png' } 
