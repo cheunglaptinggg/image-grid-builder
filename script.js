@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
          },
         {
              name: "Easter", url: "templates/2025Easter.png",
-             margins: { top: 205, bottom: 205, left: 75, right: 75 },
+             margins: { top: 150, bottom: 205, left: 75, right: 75 },
              padding: { top: 95, bottom: 105, left: 60, right: 60 },
              background: { type: 'color', value: '#B7C8DC'}
          },
@@ -73,8 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
          },
                 {
              name: "School", url: "templates/top-transparent.png",
-             margins: { top: 350, bottom: 350, left: 150 , right: 150 },
-             padding: { top: 50, bottom: 50, left: 50, right: 50 },
+             margins: { top: 150, bottom: 150, left: 50 , right: 50 },
+             padding: { top: 20, bottom: 20, left: 20, right: 20 },
              background: { type: 'image', url: 'templates/School.png' } // Example background image - MAKE SURE THIS FILE EXISTS!
          }
     ];
