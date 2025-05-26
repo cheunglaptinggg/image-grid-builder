@@ -231,7 +231,7 @@ console.log('Batch upload processing complete.');
 });
 clearSlotBtns.forEach(btn => btn.addEventListener('click', (event) => clearPhotoSlot(parseInt(event.target.dataset.index, 10))));
 clearAllPhotosBtn.addEventListener('click', clearAllPhotoSlots);
-templatePresetSelect.addEventListener('change', handlePresetChange); // Defined below
+
 templateInput.addEventListener('change', async (event) => {
 const file = event.target.files[0];
 if (file) { if (templatePresetSelect.value !== 'custom') { templatePresetSelect.value = 'custom'; } await loadCustomTemplate(file); }
@@ -311,7 +311,8 @@ if(bgImagePreview) { bgImagePreview.src = '#'; bgImagePreview.style.display = 'n
 if(clearBgImageBtn) clearBgImageBtn.style.display = 'none';
 if (clearInput && bgImageInput) { bgImageInput.value = ''; }
 }
-
+templatePresetSelect.addEventListener('change', handlePresetChange); 
+  
 // --- ** CORRECTED Template Loading (FETCH METHOD) ** ---
 async function handlePresetChange() {
 const selectedValue = templatePresetSelect.value;
