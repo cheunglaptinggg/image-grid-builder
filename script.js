@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
          },
                 {
              name: "School", url: "templates/School-top.png",
-             margins: { top: 170, bottom: 170, left: 30 , right: 30 },
+             margins: { top: 185, bottom: 185, left: 50 , right: 50 },
              padding: { top: 25, bottom: 25, left: 25, right: 25 },
              background: { type: 'image', url: 'templates/School.png' } // Example background image - MAKE SURE THIS FILE EXISTS!
          }
