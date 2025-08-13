@@ -76,6 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
              margins: { top: 650, bottom: 650, left: 200 , right: 200 },
              padding: { top: 85, bottom: 85, left: 85, right: 85 },
              background: { type: 'image', url: 'templates/School.png' } // Example background image - MAKE SURE THIS FILE EXISTS!
+         },
+         {
+             name: "Mid Autumn", url: "templates/midAut-top.png",
+             margins: { top: 250, bottom: 120, left: 65 , right: 65 },
+             margins: { top: 350, bottom: 80, left: 65 , right: 65 },
+             padding: { top: 50, bottom: 50, left: 50, right: 50 },
+             background: { type: 'image', url: 'templates/midAut-back.png' } // Example background image - MAKE SURE THIS FILE EXISTS!
          }
     ];
 
