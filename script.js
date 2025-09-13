@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
          {
              name: "Mid Autumn 2", url: "templates/midAut2-top.png",
              margins: { top: 18, bottom: 245, left: 15, right: 15 },
-             padding: { top: 20, bottom: 20, left: 20, right: 20 }
+             padding: { top: 20, bottom: 20, left: 20, right: 20 },
              background: { type: 'image', url: 'templates/midAut2-bg.png' } // Example background image - MAKE SURE THIS FILE EXISTS!
          }
     ];
