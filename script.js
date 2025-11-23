@@ -97,6 +97,13 @@ document.addEventListener('DOMContentLoaded', () => {
              margins: { top: 350, bottom: 80, left: 65 , right: 65 },
              padding: { top: 50, bottom: 50, left: 50, right: 50 },
              background: { type: 'image', url: 'templates/doginn-template-Halloween_bot.png' } // 
+         },
+           {
+             name: "Xmas", url: "templates/doginn-template-xmas_top.png",
+             margins: { top: 250, bottom: 120, left: 65 , right: 65 },
+             margins: { top: 350, bottom: 80, left: 65 , right: 65 },
+             padding: { top: 50, bottom: 50, left: 50, right: 50 },
+             background: { type: 'image', url: 'templates/doginn-template-xmas_bot.png' } // 
          }
     ];
 
